@@ -1,0 +1,22 @@
+{
+  "name": "testproject-frontend",
+  "version": "1.0.0",
+  "description": "Frontend login page with TypeScript",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "npx http-server public -p 3001 -c-1"
+  },
+  "keywords": ["auth", "login", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/jest": "^29.5.11",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
