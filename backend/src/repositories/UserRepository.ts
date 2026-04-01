@@ -74,6 +74,11 @@ export class UserRepository {
       [username]
     );
 
-    return result.length > 0 && result[0].values[0][0] > 0;
+    if (result.length === 0 || !result[0].values[0]) {
+      return false;
+    }
+
+    const count = result[0].values[0][0];
+    return typeof count === 'number' && count > 0;
   }
 }
