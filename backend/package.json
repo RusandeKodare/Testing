@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "test": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "view-db": "node view-db.js"
   },
   "keywords": [
     "auth",
