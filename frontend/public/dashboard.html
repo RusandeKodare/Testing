@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
+    <title>Dashboard - Login System</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-card">
+            <div class="dashboard-header">
+                <h1>Welcome, <span id="username">User</span>! 👋</h1>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+            
+            <div class="dashboard-content">
+                <div class="info-card">
+                    <h2>🎉 You're logged in!</h2>
+                    <p>This is your secure dashboard. You have successfully authenticated.</p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Session Information</h3>
+                    <div class="session-info">
+                        <p><strong>Username:</strong> <span id="username-detail">-</span></p>
+                        <p><strong>Login Time:</strong> <span id="login-time">-</span></p>
+                        <p><strong>Token Status:</strong> <span id="token-status" class="status-active">Active</span></p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>Quick Actions</h3>
+                    <div class="actions">
+                        <button class="action-btn" onclick="alert('Feature coming soon!')">View Profile</button>
+                        <button class="action-btn" onclick="alert('Feature coming soon!')">Settings</button>
+                        <button class="action-btn" onclick="alert('Feature coming soon!')">Help</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="dist/dashboard.js"></script>
+</body>
+</html>

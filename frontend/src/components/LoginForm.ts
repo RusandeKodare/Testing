@@ -59,11 +59,16 @@ export class LoginForm {
         const result = await this.authService.login({ username, password });
 
         if (result.success) {
-          this.showMessage('login-message', result.message, 'success');
+          this.showMessage('login-message', 'Login successful! Redirecting...', 'success');
           form.reset();
           
           if (result.token) {
             localStorage.setItem('authToken', result.token);
+            localStorage.setItem('username', username);
+            
+            setTimeout(() => {
+              window.location.href = '/dashboard.html';
+            }, 1000);
           }
         } else {
           this.showMessage('login-message', result.message, 'error');
@@ -108,12 +113,18 @@ export class LoginForm {
         const result = await this.authService.register({ username, password });
 
         if (result.success) {
-          this.showMessage('register-message', result.message, 'success');
+          this.showMessage('register-message', 'Registration successful! Please login.', 'success');
           form.reset();
           
           if (result.token) {
             localStorage.setItem('authToken', result.token);
+            localStorage.setItem('username', username);
           }
+          
+          setTimeout(() => {
+            const loginTab = document.querySelector('[data-tab="login"]') as HTMLElement;
+            if (loginTab) loginTab.click();
+          }, 1500);
         } else {
           this.showMessage('register-message', result.message, 'error');
         }
