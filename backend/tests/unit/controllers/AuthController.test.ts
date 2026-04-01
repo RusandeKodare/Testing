@@ -13,11 +13,12 @@ describe('AuthController', () => {
   let statusMock: jest.Mock;
 
   beforeEach(() => {
-    mockAuthService = new AuthService(null as any) as jest.Mocked<AuthService>;
-    authController = new AuthController(mockAuthService);
+    mockAuthService = new AuthService(null as any, 'test-secret', undefined) as jest.Mocked<AuthService>;
+    authController = new AuthController(mockAuthService, undefined);
 
-    jsonMock = jest.fn();
+    jsonMock = jest.fn().mockReturnValue({});
     statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    const cookieMock = jest.fn().mockReturnValue({});
 
     mockRequest = {
       body: {}
@@ -25,13 +26,14 @@ describe('AuthController', () => {
 
     mockResponse = {
       status: statusMock,
-      json: jsonMock
+      json: jsonMock,
+      cookie: cookieMock
     };
   });
 
   describe('register', () => {
     it('should return 201 on successful registration', async () => {
-      mockRequest.body = { username: 'testuser', password: 'password123' };
+      mockRequest.body = { username: 'testuser', password: 'password123', confirmPassword: 'password123' };
       mockAuthService.register.mockResolvedValue({
         success: true,
         message: 'Registration successful',
@@ -49,31 +51,31 @@ describe('AuthController', () => {
     });
 
     it('should return 400 when username is missing', async () => {
-      mockRequest.body = { password: 'password123' };
+      mockRequest.body = { password: 'password123', confirmPassword: 'password123' };
 
       await authController.register(mockRequest as Request, mockResponse as Response);
 
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
-        message: 'Username and password are required'
+        message: 'Username, password, and password confirmation are required'
       });
     });
 
     it('should return 400 when password is missing', async () => {
-      mockRequest.body = { username: 'testuser' };
+      mockRequest.body = { username: 'testuser', confirmPassword: 'password123' };
 
       await authController.register(mockRequest as Request, mockResponse as Response);
 
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
-        message: 'Username and password are required'
+        message: 'Username, password, and password confirmation are required'
       });
     });
 
     it('should return 400 when username already exists', async () => {
-      mockRequest.body = { username: 'existinguser', password: 'password123' };
+      mockRequest.body = { username: 'existinguser', password: 'password123', confirmPassword: 'password123' };
       mockAuthService.register.mockResolvedValue({
         success: false,
         message: 'Username already exists'
@@ -89,7 +91,7 @@ describe('AuthController', () => {
     });
 
     it('should return 500 on internal error', async () => {
-      mockRequest.body = { username: 'testuser', password: 'password123' };
+      mockRequest.body = { username: 'testuser', password: 'password123', confirmPassword: 'password123' };
       mockAuthService.register.mockRejectedValue(new Error('Database error'));
 
       await authController.register(mockRequest as Request, mockResponse as Response);

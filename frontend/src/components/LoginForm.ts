@@ -91,9 +91,11 @@ export class LoginForm {
 
       const username = (document.getElementById('register-username') as HTMLInputElement).value;
       const password = (document.getElementById('register-password') as HTMLInputElement).value;
+      const confirmPassword = (document.getElementById('register-confirm-password') as HTMLInputElement)?.value || '';
 
       const usernameValidation = Validator.validateUsername(username);
       const passwordValidation = Validator.validatePassword(password);
+      const passwordMatchValidation = Validator.validatePasswordMatch(password, confirmPassword);
 
       if (!usernameValidation.isValid) {
         this.showFieldError('register-username', usernameValidation.error!);
@@ -105,12 +107,21 @@ export class LoginForm {
         return;
       }
 
+      if (!passwordMatchValidation.isValid) {
+        this.showFieldError('register-confirm-password', passwordMatchValidation.error!);
+        return;
+      }
+
       const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
       button.disabled = true;
       button.textContent = 'Creating account...';
 
       try {
-        const result = await this.authService.register({ username, password });
+        const result = await this.authService.register({ 
+          username, 
+          password,
+          confirmPassword
+        });
 
         if (result.success) {
           this.showMessage('register-message', 'Registration successful! Please login.', 'success');

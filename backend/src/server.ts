@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import * as winston from 'winston';
 import { DatabaseConfig } from './config/database';
 import { UserRepository } from './repositories/UserRepository';
 import { AuthService } from './services/AuthService';
@@ -11,6 +13,27 @@ import { createAuthRoutes } from './routes/authRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
+
+// Configure Winston Logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'auth-service' },
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ]
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple()
+  }));
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -62,6 +85,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 
 async function startServer() {
@@ -69,8 +93,8 @@ async function startServer() {
   await dbConfig.initialize();
 
   const userRepository = new UserRepository(dbConfig.getDatabase());
-  const authService = new AuthService(userRepository, JWT_SECRET || 'fallback-dev-secret');
-  const authController = new AuthController(authService);
+  const authService = new AuthService(userRepository, JWT_SECRET || 'fallback-dev-secret', logger);
+  const authController = new AuthController(authService, logger);
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
   

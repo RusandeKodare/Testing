@@ -44,10 +44,42 @@ export class Validator {
       };
     }
 
+    if (!/[A-Z]/.test(password)) {
+      return {
+        isValid: false,
+        error: 'Password must contain at least 1 uppercase letter'
+      };
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return {
+        isValid: false,
+        error: 'Password must contain at least 1 lowercase letter'
+      };
+    }
+
     if (!/\d/.test(password)) {
       return {
         isValid: false,
         error: 'Password must contain at least 1 number'
+      };
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
+      return {
+        isValid: false,
+        error: 'Password must contain at least 1 special character (!@#$%^&* etc)'
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  static validatePasswordMatch(password: string, confirmPassword: string): ValidationResult {
+    if (password !== confirmPassword) {
+      return {
+        isValid: false,
+        error: 'Passwords do not match'
       };
     }
 

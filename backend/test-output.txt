@@ -1,0 +1,118 @@
+
+> testproject-backend@1.0.0 test
+> jest --coverage
+
+PASS tests/unit/models/User.test.ts
+  User Model
+    User interface
+      ΓêÜ should accept valid user object (6 ms)
+      ΓêÜ should accept user without optional fields (1 ms)
+    UserCredentials interface
+      ΓêÜ should accept valid credentials
+
+PASS tests/unit/repositories/UserRepository.test.ts
+  UserRepository
+    createUser
+      ΓêÜ should create a new user and return user object (46 ms)
+      ΓêÜ should throw error when creating duplicate username (32 ms)
+    findByUsername
+      ΓêÜ should return user when username exists (3 ms)
+      ΓêÜ should return null when username does not exist (1 ms)
+    findById
+      ΓêÜ should return user when id exists (3 ms)
+      ΓêÜ should return null when id does not exist (1 ms)
+    userExists
+      ΓêÜ should return true when user exists (3 ms)
+      ΓêÜ should return false when user does not exist (2 ms)
+    incrementLoginAttempts
+      ΓêÜ should increment login attempts (3 ms)
+    lockAccount
+      ΓêÜ should lock account until specified time (3 ms)
+    resetLoginAttempts
+      ΓêÜ should reset login attempts and lock (4 ms)
+    isAccountLocked
+      ΓêÜ should return false if no lock (2 ms)
+      ΓêÜ should return true if locked and time not expired (2 ms)
+
+FAIL tests/unit/controllers/AuthController.test.ts
+  AuthController
+    register
+      ΓêÜ should return 201 on successful registration (11 ms)
+      ΓêÜ should return 400 when username is missing (1 ms)
+      ΓêÜ should return 400 when password is missing
+      ΓêÜ should return 400 when username already exists
+      ├ù should return 500 on internal error (2 ms)
+    login
+      ΓêÜ should return 200 on successful login (1 ms)
+      ΓêÜ should return 400 when username is missing (1 ms)
+      ΓêÜ should return 400 when password is missing
+      ΓêÜ should return 401 on invalid credentials (1 ms)
+      ΓêÜ should return 500 on internal error (1 ms)
+
+  ΓùÅ AuthController ΓÇ║ register ΓÇ║ should return 500 on internal error
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: 500
+    Received: 400
+
+    Number of calls: 1
+
+       97 |       await authController.register(mockRequest as Request, mockResponse as Response);
+       98 |
+    >  99 |       expect(statusMock).toHaveBeenCalledWith(500);
+          |                          ^
+      100 |       expect(jsonMock).toHaveBeenCalledWith({
+      101 |         success: false,
+      102 |         message: 'Internal server error'
+
+      at Object.<anonymous> (tests/unit/controllers/AuthController.test.ts:99:26)
+
+PASS tests/unit/config/database.test.ts
+  DatabaseConfig
+    initialize
+      ΓêÜ should create a new database if file does not exist (37 ms)
+      ΓêÜ should load existing database if file exists (5 ms)
+      ΓêÜ should create users table on initialization (4 ms)
+    getDatabase
+      ΓêÜ should throw error if database not initialized (24 ms)
+      ΓêÜ should return database instance when initialized (3 ms)
+    save
+      ΓêÜ should throw error if database not initialized
+      ΓêÜ should persist database to file (4 ms)
+    close
+      ΓêÜ should save and close database (3 ms)
+
+PASS tests/unit/services/AuthService.test.ts
+  AuthService
+    register
+      ΓêÜ should successfully register a new user (88 ms)
+      ΓêÜ should fail when username already exists (1 ms)
+      ΓêÜ should hash password before storing (73 ms)
+    login
+      ΓêÜ should successfully login with valid credentials (125 ms)
+      ΓêÜ should fail when user does not exist
+      ΓêÜ should fail when password is incorrect (121 ms)
+    verifyToken
+      ΓêÜ should verify valid token (61 ms)
+      ΓêÜ should return null for invalid token
+      ΓêÜ should return null for expired token (2 ms)
+
+--------------------|---------|----------|---------|---------|------------------------
+File                | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s      
+--------------------|---------|----------|---------|---------|------------------------
+All files           |   89.18 |    74.57 |     100 |   89.11 |                        
+ config             |   93.33 |     62.5 |     100 |   93.33 |                        
+  database.ts       |   93.33 |     62.5 |     100 |   93.33 | 28,57                  
+ controllers        |   92.59 |      100 |     100 |    92.3 |                        
+  AuthController.ts |   92.59 |      100 |     100 |    92.3 | 40-41                  
+ repositories       |   90.69 |    73.91 |     100 |   90.69 |                        
+  UserRepository.ts |   90.69 |    73.91 |     100 |   90.69 | 21,112-113,126         
+ services           |   83.33 |    53.84 |     100 |   83.33 |                        
+  AuthService.ts    |   83.33 |    53.84 |     100 |   83.33 | 26,33-36,85-89,103-108 
+--------------------|---------|----------|---------|---------|------------------------
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       1 failed, 42 passed, 43 total
+Snapshots:   0 total
+Time:        2.592 s, estimated 3 s
+Ran all test suites.

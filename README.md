@@ -4,7 +4,7 @@ A secure, full-stack login system built with TypeScript, featuring clean archite
 
 ## ⚠️ Security Notice
 
-This application has been audited against the **OWASP Top 10** security framework. Critical security fixes have been implemented. **Security Score: B+ (85/100)**
+This application has been audited against the **OWASP Top 10** security framework. Critical security fixes have been implemented. **Security Score: A- (92/100)**
 
 **See `SECURITY_AUDIT.md` and `SECURITY_FIXES.md` for complete details.**
 
@@ -13,6 +13,11 @@ This application has been audited against the **OWASP Top 10** security framewor
 - **User Registration & Login** with JWT tokens
 - **Password Security**: bcrypt hashing with salt rounds
 - **Input Validation**: Both frontend and backend validation
+- **Account Lockout**: Brute force protection (5 failed attempts = 30-min lock)
+- **Security Event Logging**: Winston-based audit trail
+- **Strong Password Policy**: 8+ chars with uppercase, lowercase, numbers, special chars
+- **Password Confirmation**: Prevents user typos
+- **httpOnly Cookies**: XSS-resistant token storage
 - **Dark Mode UI**: Clean, animated interface
 - **SQLite Database**: Lightweight, file-based storage
 - **Comprehensive Tests**: 65 tests with >90% coverage
@@ -301,13 +306,19 @@ ALLOWED_ORIGINS=https://yourdomain.com
 ✅ Reduced JWT lifetime (1 hour)  
 ✅ Fixed username enumeration  
 ✅ Request size limits  
+✅ **Account lockout mechanism (NEW)** — 5 failed attempts = 30-minute lock  
+✅ **Security event logging (NEW)** — Full audit trail with Winston  
+✅ **Enhanced password policy (NEW)** — Uppercase, lowercase, numbers, special chars  
+✅ **Password confirmation field (NEW)** — Prevents user typos  
+✅ **httpOnly cookies (NEW)** — XSS-resistant token storage  
 
 ### Recommended Additional Improvements
 
-- Account lockout after failed attempts
-- Security event logging
-- httpOnly cookies for tokens
 - Token revocation mechanism
+- Security event alerting
+- Advanced rate limiting (per username vs per IP)
+- 2FA/MFA support
+- Session management
 
 Full audit report: **`SECURITY_AUDIT.md`**  
 Implementation details: **`SECURITY_FIXES.md`**

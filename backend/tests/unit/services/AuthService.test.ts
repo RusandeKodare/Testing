@@ -9,7 +9,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mockUserRepository = new UserRepository(null as any) as jest.Mocked<UserRepository>;
-    authService = new AuthService(mockUserRepository, 'test-secret');
+    authService = new AuthService(mockUserRepository, 'test-secret', undefined);
   });
 
   describe('register', () => {
@@ -24,7 +24,8 @@ describe('AuthService', () => {
 
       const result = await authService.register({
         username: 'testuser',
-        password: 'password123'
+        password: 'password123',
+        confirmPassword: 'password123'
       });
 
       expect(result.success).toBe(true);
@@ -38,11 +39,12 @@ describe('AuthService', () => {
 
       const result = await authService.register({
         username: 'existinguser',
-        password: 'password123'
+        password: 'password123',
+        confirmPassword: 'password123'
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe('Username already exists');
+      expect(result.message).toBe('Registration failed. Please try a different username.');
       expect(result.token).toBeUndefined();
     });
 
@@ -57,7 +59,8 @@ describe('AuthService', () => {
 
       await authService.register({
         username: 'testuser',
-        password: 'password123'
+        password: 'password123',
+        confirmPassword: 'password123'
       });
 
       expect(mockUserRepository.createUser).toHaveBeenCalled();
@@ -136,7 +139,8 @@ describe('AuthService', () => {
 
       const registerResult = await authService.register({
         username: 'testuser',
-        password: 'password123'
+        password: 'password123',
+        confirmPassword: 'password123'
       });
 
       const verified = authService.verifyToken(registerResult.token!);

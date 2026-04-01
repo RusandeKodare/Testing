@@ -11,6 +11,7 @@ export interface AuthResponse {
 export interface UserCredentials {
   username: string;
   password: string;
+  confirmPassword?: string;
 }
 
 export class AuthApiService {

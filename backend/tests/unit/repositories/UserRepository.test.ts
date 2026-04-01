@@ -15,7 +15,9 @@ describe('UserRepository', () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        login_attempts INTEGER DEFAULT 0,
+        locked_until DATETIME DEFAULT NULL
       )
     `);
 
@@ -34,6 +36,8 @@ describe('UserRepository', () => {
       expect(user.username).toBe('testuser');
       expect(user.passwordHash).toBe('hashedpassword');
       expect(user.createdAt).toBeInstanceOf(Date);
+      expect(user.loginAttempts).toBe(0);
+      expect(user.lockedUntil).toBeNull();
     });
 
     it('should throw error when creating duplicate username', () => {
@@ -94,6 +98,61 @@ describe('UserRepository', () => {
       const exists = userRepository.userExists('nonexistent');
 
       expect(exists).toBe(false);
+    });
+  });
+
+  describe('incrementLoginAttempts', () => {
+    it('should increment login attempts', () => {
+      userRepository.createUser('testuser', 'hashedpassword');
+
+      userRepository.incrementLoginAttempts('testuser');
+      let user = userRepository.findByUsername('testuser');
+      expect(user?.loginAttempts).toBe(1);
+
+      userRepository.incrementLoginAttempts('testuser');
+      user = userRepository.findByUsername('testuser');
+      expect(user?.loginAttempts).toBe(2);
+    });
+  });
+
+  describe('lockAccount', () => {
+    it('should lock account until specified time', () => {
+      userRepository.createUser('testuser', 'hashedpassword');
+
+      userRepository.lockAccount('testuser', 30);
+      const lockedUser = userRepository.findByUsername('testuser');
+
+      expect(lockedUser?.lockedUntil).not.toBeNull();
+      expect(lockedUser?.lockedUntil).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('resetLoginAttempts', () => {
+    it('should reset login attempts and lock', () => {
+      userRepository.createUser('testuser', 'hashedpassword');
+      userRepository.incrementLoginAttempts('testuser');
+      userRepository.lockAccount('testuser', 30);
+
+      userRepository.resetLoginAttempts('testuser');
+      const user = userRepository.findByUsername('testuser');
+
+      expect(user?.loginAttempts).toBe(0);
+      expect(user?.lockedUntil).toBeNull();
+    });
+  });
+
+  describe('isAccountLocked', () => {
+    it('should return false if no lock', () => {
+      const user = userRepository.createUser('testuser', 'hashedpassword');
+      expect(userRepository.isAccountLocked(user)).toBe(false);
+    });
+
+    it('should return true if locked and time not expired', () => {
+      userRepository.createUser('testuser', 'hashedpassword');
+      userRepository.lockAccount('testuser', 30);
+      const lockedUser = userRepository.findByUsername('testuser')!;
+
+      expect(userRepository.isAccountLocked(lockedUser)).toBe(true);
     });
   });
 });
