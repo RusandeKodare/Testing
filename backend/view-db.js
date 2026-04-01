@@ -1,3 +1,7 @@
+// Usage:
+// cd C:\Git\TestProject\backend
+// npm run view-db
+
 const fs = require('fs');
 const path = require('path');
 const initSqlJs = require('sql.js');
