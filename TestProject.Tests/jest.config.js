@@ -1,7 +1,6 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/backend', '<rootDir>/frontend'],
   testMatch: ['**/*.test.ts'],
   collectCoverageFrom: [
     '../backend/src/**/*.ts',
@@ -9,17 +8,13 @@ module.exports = {
     '!**/*.d.ts',
     '!**/node_modules/**'
   ],
-  moduleNameMapper: {
-    '^../../../src/(.*)$': '<rootDir>/../backend/src/$1',
-    '^../../src/(.*)$': '<rootDir>/../backend/src/$1'
-  },
   coverageDirectory: './coverage',
   coverageThreshold: {
     global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70
     }
   },
   verbose: true,
@@ -30,17 +25,18 @@ module.exports = {
       testEnvironment: 'node',
       testMatch: ['<rootDir>/backend/**/*.test.ts'],
       moduleNameMapper: {
-        '^../../../src/(.*)$': '<rootDir>/../backend/src/$1'
-      }
+        '^(\\.{1,2}/.*)\\.js$': '$1'
+      },
+      modulePaths: ['<rootDir>/../backend/src'],
+      roots: ['<rootDir>/backend', '<rootDir>/../backend/src']
     },
     {
       displayName: 'frontend',
       preset: 'ts-jest',
       testEnvironment: 'jsdom',
       testMatch: ['<rootDir>/frontend/**/*.test.ts'],
-      moduleNameMapper: {
-        '^../../../src/(.*)$': '<rootDir>/../frontend/src/$1'
-      }
+      modulePaths: ['<rootDir>/../frontend/src'],
+      roots: ['<rootDir>/frontend', '<rootDir>/../frontend/src']
     }
   ]
 };

@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
     "serve": "npx http-server public -p 3001 -c-1"
   },
   "keywords": ["auth", "login", "typescript"],

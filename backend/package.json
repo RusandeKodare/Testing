@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts"
+    "dev": "ts-node src/server.ts",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "keywords": ["auth", "login", "typescript", "express"],
   "author": "",

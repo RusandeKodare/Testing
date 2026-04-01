@@ -9,8 +9,12 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["../*"]
+    }
   },
-  "include": ["backend/**/*", "frontend/**/*"],
+  "include": ["backend/**/*", "frontend/**/*", "../backend/src/**/*", "../frontend/src/**/*"],
   "exclude": ["node_modules"]
 }
