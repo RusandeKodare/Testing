@@ -59,7 +59,7 @@ describe('Validator', () => {
 
   describe('validatePassword', () => {
     it('should return valid for correct password', () => {
-      const result = Validator.validatePassword('password123');
+      const result = Validator.validatePassword('SecurePassword123!');
 
       expect(result.isValid).toBe(true);
       expect(result.error).toBeUndefined();
@@ -80,26 +80,26 @@ describe('Validator', () => {
     });
 
     it('should reject password without number', () => {
-      const result = Validator.validatePassword('password');
+      const result = Validator.validatePassword('Password!');
 
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Password must contain at least 1 number');
     });
 
     it('should accept password with exactly 8 characters and a number', () => {
-      const result = Validator.validatePassword('passwor1');
+      const result = Validator.validatePassword('Pass@123');
 
       expect(result.isValid).toBe(true);
     });
 
     it('should accept password with multiple numbers', () => {
-      const result = Validator.validatePassword('password123');
+      const result = Validator.validatePassword('Password123!');
 
       expect(result.isValid).toBe(true);
     });
 
     it('should accept password with special characters and numbers', () => {
-      const result = Validator.validatePassword('p@ssw0rd!');
+      const result = Validator.validatePassword('P@ssw0rd!');
 
       expect(result.isValid).toBe(true);
     });

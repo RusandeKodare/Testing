@@ -6,7 +6,7 @@ A secure, full-stack login system built with TypeScript, featuring clean archite
 
 This application has been audited against the **OWASP Top 10** security framework. Critical security fixes have been implemented. **Security Score: A- (92/100)**
 
-**See `SECURITY_AUDIT.md` and `SECURITY_FIXES.md` for complete details.**
+**See `SECURITY_AUDIT.md` for a comprehensive, living security audit document.**
 
 ## Features
 
@@ -295,7 +295,7 @@ ALLOWED_ORIGINS=https://yourdomain.com
 
 2. **Enable HTTPS** (use reverse proxy or platform with SSL)
 
-3. **Review security documentation**: See `SECURITY_AUDIT.md` and `SECURITY_FIXES.md`
+3. **Review security documentation**: See `SECURITY_AUDIT.md` (living audit document)
 
 ### Security Improvements Implemented
 
@@ -320,8 +320,7 @@ ALLOWED_ORIGINS=https://yourdomain.com
 - 2FA/MFA support
 - Session management
 
-Full audit report: **`SECURITY_AUDIT.md`**  
-Implementation details: **`SECURITY_FIXES.md`**
+Full audit report: **`SECURITY_AUDIT.md`** (Living document - updated regularly)
 
 ## Development
 
