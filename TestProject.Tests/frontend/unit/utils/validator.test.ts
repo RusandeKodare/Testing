@@ -1,0 +1,107 @@
+import { Validator } from '../../../src/utils/validator';
+
+describe('Validator', () => {
+  describe('validateUsername', () => {
+    it('should return valid for correct username', () => {
+      const result = Validator.validateUsername('testuser');
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should reject empty username', () => {
+      const result = Validator.validateUsername('');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Username is required');
+    });
+
+    it('should reject whitespace-only username', () => {
+      const result = Validator.validateUsername('   ');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Username is required');
+    });
+
+    it('should reject username shorter than 3 characters', () => {
+      const result = Validator.validateUsername('ab');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Username must be at least 3 characters');
+    });
+
+    it('should reject username with special characters', () => {
+      const result = Validator.validateUsername('test@user');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Username must be alphanumeric only');
+    });
+
+    it('should reject username with spaces', () => {
+      const result = Validator.validateUsername('test user');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Username must be alphanumeric only');
+    });
+
+    it('should accept alphanumeric username', () => {
+      const result = Validator.validateUsername('user123');
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept exactly 3 characters', () => {
+      const result = Validator.validateUsername('abc');
+
+      expect(result.isValid).toBe(true);
+    });
+  });
+
+  describe('validatePassword', () => {
+    it('should return valid for correct password', () => {
+      const result = Validator.validatePassword('password123');
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should reject empty password', () => {
+      const result = Validator.validatePassword('');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Password is required');
+    });
+
+    it('should reject password shorter than 8 characters', () => {
+      const result = Validator.validatePassword('pass1');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Password must be at least 8 characters');
+    });
+
+    it('should reject password without number', () => {
+      const result = Validator.validatePassword('password');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe('Password must contain at least 1 number');
+    });
+
+    it('should accept password with exactly 8 characters and a number', () => {
+      const result = Validator.validatePassword('passwor1');
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept password with multiple numbers', () => {
+      const result = Validator.validatePassword('password123');
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept password with special characters and numbers', () => {
+      const result = Validator.validatePassword('p@ssw0rd!');
+
+      expect(result.isValid).toBe(true);
+    });
+  });
+});
