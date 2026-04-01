@@ -265,6 +265,21 @@ CREATE TABLE users (
 
 MIT
 
-## Author
+## Development
 
-Built with clean code principles and comprehensive testing.
+This application was created in collaboration with **GitHub Copilot AI** to demonstrate:
+- Clean code architecture principles
+- Comprehensive test-driven development
+- Security best practices
+- Modern TypeScript development
+
+The AI assistant helped with:
+- Architectural design following Single Responsibility Principle
+- Implementation of all backend and frontend components
+- Writing 65+ comprehensive unit tests
+- Security considerations and validation
+- Documentation and code organization
+
+## License
+
+MIT

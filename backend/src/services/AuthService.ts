@@ -14,7 +14,10 @@ export class AuthService {
   private readonly saltRounds = 10;
   private readonly jwtSecret: string;
 
-  constructor(private userRepository: UserRepository, jwtSecret: string = 'your-secret-key-change-in-production') {
+  constructor(private userRepository: UserRepository, jwtSecret?: string) {
+    if (!jwtSecret) {
+      throw new Error('JWT secret is required');
+    }
     this.jwtSecret = jwtSecret;
   }
 
@@ -22,7 +25,7 @@ export class AuthService {
     if (this.userRepository.userExists(credentials.username)) {
       return {
         success: false,
-        message: 'Username already exists'
+        message: 'Registration failed. Please try a different username.'
       };
     }
 
@@ -72,7 +75,7 @@ export class AuthService {
     return jwt.sign(
       { id: user.id, username: user.username },
       this.jwtSecret,
-      { expiresIn: '24h' }
+      { expiresIn: '1h' }
     );
   }
 
