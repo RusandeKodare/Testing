@@ -1,5 +1,5 @@
-import { AuthApiService } from '../services/AuthApiService';
-import { Validator } from '../utils/validator';
+import { AuthApiService } from '../services/AuthApiService.js';
+import { Validator } from '../utils/validator.js';
 
 export class LoginForm {
   private authService: AuthApiService;
