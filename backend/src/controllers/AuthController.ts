@@ -6,6 +6,15 @@ import { UserCredentials } from '../models/User';
 export class AuthController {
   constructor(private authService: AuthService, private logger?: winston.Logger) {}
 
+  private getCookieOptions() {
+    return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      maxAge: 3600000 // 1 hour
+    };
+  }
+
   async register(req: Request, res: Response): Promise<void> {
     try {
       const credentials: UserCredentials = {
@@ -26,12 +35,7 @@ export class AuthController {
 
       if (result.success && result.token) {
         // Set httpOnly cookie
-        res.cookie('authToken', result.token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 3600000 // 1 hour
-        });
+        res.cookie('authToken', result.token, this.getCookieOptions());
         res.status(201).json(result);
       } else {
         res.status(400).json(result);
@@ -64,12 +68,7 @@ export class AuthController {
 
       if (result.success && result.token) {
         // Set httpOnly cookie
-        res.cookie('authToken', result.token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 3600000 // 1 hour
-        });
+        res.cookie('authToken', result.token, this.getCookieOptions());
         res.status(200).json(result);
       } else {
         res.status(401).json(result);
@@ -86,11 +85,8 @@ export class AuthController {
   async logout(_req: Request, res: Response): Promise<void> {
     try {
       // Clear the auth cookie
-      res.clearCookie('authToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      });
+      const { maxAge, ...clearOptions } = this.getCookieOptions();
+      res.clearCookie('authToken', clearOptions);
       
       this.logger?.info('User logged out successfully');
       

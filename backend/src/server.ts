@@ -93,7 +93,13 @@ async function startServer() {
   await dbConfig.initialize();
 
   const userRepository = new UserRepository(dbConfig.getDatabase());
-  const authService = new AuthService(userRepository, JWT_SECRET || 'fallback-dev-secret', logger);
+  
+  if (!JWT_SECRET || JWT_SECRET.length < 32) {
+    logger.error('JWT_SECRET is not set or too short. Application cannot start.');
+    throw new Error('JWT_SECRET must be set in environment and be at least 32 characters long');
+  }
+  
+  const authService = new AuthService(userRepository, JWT_SECRET, logger);
   const authController = new AuthController(authService, logger);
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
