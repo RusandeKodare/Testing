@@ -21,7 +21,7 @@ describe('UserRepository', () => {
       )
     `);
 
-    userRepository = new UserRepository(db);
+    userRepository = new UserRepository(db, undefined);
   });
 
   afterEach(() => {

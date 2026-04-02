@@ -368,6 +368,123 @@ it('should lock account after 5 failed attempts', async () => {
 
 ---
 
+## Logging System 📋
+
+This project uses **Pino** for fast, structured logging with automatic redaction of sensitive data.
+
+### How It Works:
+
+The logging system is configured in `backend/src/utils/logger.ts` with:
+- **Module-based loggers**: Each module (auth, server, etc.) has its own logger
+- **Automatic redaction**: Passwords, tokens, and secrets are automatically removed from logs
+- **Structured logging**: Logs include context, timestamps, and environment info
+- **Pretty printing**: Development logs are human-readable; production logs are JSON
+
+### Using the Logger:
+
+```typescript
+import { getLogger } from '../utils/logger';
+
+const logger = getLogger('my-module');
+
+// Different log levels
+logger.info({ userId: 123 }, 'User logged in successfully');
+logger.warn({ username: 'invalid' }, 'Failed login attempt');
+logger.error({ error: err.message }, 'Unexpected error during login');
+logger.debug({ details: 'value' }, 'Debug information');
+
+// Pino automatically redacts these fields:
+// password, confirmPassword, passwordHash, token, authToken, password_hash
+// req.headers.authorization, req.headers.cookie
+```
+
+### Log Levels:
+
+```
+debug  → Detailed information for developers
+info   → General informational messages ✅ Most common
+warn   → Warning messages for unexpected situations
+error  → Error messages for failures
+fatal  → Critical errors that prevent operation
+```
+
+### Examples:
+
+#### Authentication Logging:
+```typescript
+const logger = getLogger('auth');
+
+// ✅ GOOD: Structured logging with context
+logger.info({ username: user.username, userId: user.id }, 'User registered successfully');
+logger.warn({ username: creds.username, reason: 'password_mismatch' }, 'Registration failed');
+logger.error({ username }, 'Account locked after failed attempts');
+```
+
+#### Catching and Logging Errors:
+```typescript
+try {
+  const user = await userRepository.createUser(username, passwordHash);
+  logger.info({ userId: user.id }, 'User created in database');
+} catch (error) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : '';
+  logger.error(
+    { error: errorMessage, stack: errorStack, username },
+    'Failed to create user'
+  );
+  throw error; // or handle appropriately
+}
+```
+
+### Security with Logging:
+
+⚠️ **Important**: Sensitive data is automatically redacted, but:
+- ❌ NEVER manually log passwords or secrets
+- ❌ NEVER log full tokens (log a truncated version if needed)
+- ✅ DO log usernames, user IDs, and timestamps
+- ✅ DO log the ACTION (what happened, not the credentials)
+
+```typescript
+// ❌ BAD: Exposing sensitive data
+logger.info(`Password hash: ${passwordHash}`);
+
+// ✅ GOOD: Logging the action, not the data
+logger.info({ username, userId }, 'User password updated successfully');
+```
+
+### Viewing Logs:
+
+#### Development:
+```
+[2026-04-02 10:02:19.100 +0200] INFO: Starting registration process
+    env: "development"
+    service: "auth-service"
+    context: "auth"
+    username: "testuser"
+```
+
+#### Production:
+Logs are output as JSON for ingestion into log aggregation tools (ELK, Datadog, etc.)
+
+#### Log Files:
+- `logs/` directory is created automatically
+- All logs are written to stdout
+- In production, configure log shipping to a centralized service
+
+### Adding New Loggers:
+
+When creating a new module, get a logger:
+```typescript
+// In any file
+import { getLogger } from '../utils/logger';
+const logger = getLogger('my-feature'); // Creates a child logger
+
+// Use it
+logger.info({ data }, 'Something happened');
+```
+
+---
+
 ## Common Mistakes to Avoid
 
 ### 1. Skipping Tests

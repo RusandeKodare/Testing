@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import * as winston from 'winston';
+import { Logger } from 'pino';
 import { UserRepository } from '../repositories/UserRepository';
 import { User, UserCredentials } from '../models/User';
 
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     private userRepository: UserRepository,
     jwtSecret?: string,
-    private logger?: winston.Logger
+    private logger?: Logger
   ) {
     if (!jwtSecret) {
       throw new Error('JWT secret is required');
@@ -29,113 +29,160 @@ export class AuthService {
   }
 
   async register(credentials: UserCredentials): Promise<AuthResult> {
-    if (!credentials.confirmPassword || credentials.password !== credentials.confirmPassword) {
-      this.logger?.warn('Registration failed: passwords do not match', {
-        username: credentials.username
-      });
-      return {
-        success: false,
-        message: 'Passwords do not match'
-      };
-    }
+    try {
+      this.logger?.info({ username: credentials.username }, 'Starting registration process');
 
-    if (this.userRepository.userExists(credentials.username)) {
-      this.logger?.warn('Registration failed: username already exists', {
-        username: credentials.username
-      });
-      return {
-        success: false,
-        message: 'Registration failed. Please try a different username.'
-      };
-    }
-
-    const passwordHash = await bcrypt.hash(credentials.password, this.saltRounds);
-    const user = this.userRepository.createUser(credentials.username, passwordHash);
-
-    const token = this.generateToken(user);
-
-    this.logger?.info('User registered successfully', {
-      userId: user.id,
-      username: user.username
-    });
-
-    return {
-      success: true,
-      message: 'Registration successful',
-      token,
-      user: { id: user.id!, username: user.username }
-    };
-  }
-
-  async login(credentials: UserCredentials): Promise<AuthResult> {
-    const user = this.userRepository.findByUsername(credentials.username);
-
-    if (!user) {
-      this.logger?.warn('Login attempt with non-existent username', {
-        username: credentials.username
-      });
-      return {
-        success: false,
-        message: 'Invalid credentials'
-      };
-    }
-
-    // Check if account is locked
-    if (this.userRepository.isAccountLocked(user)) {
-      this.logger?.warn('Login attempt on locked account', {
-        userId: user.id,
-        username: user.username
-      });
-      return {
-        success: false,
-        message: 'Account is temporarily locked. Please try again later.'
-      };
-    }
-
-    const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
-
-    if (!isPasswordValid) {
-      // Increment failed login attempts
-      this.userRepository.incrementLoginAttempts(credentials.username);
-      const updatedUser = this.userRepository.findByUsername(credentials.username);
-
-      if (updatedUser && updatedUser.loginAttempts! >= this.maxLoginAttempts) {
-        this.userRepository.lockAccount(credentials.username, this.lockoutDurationMinutes);
-        this.logger?.error('Account locked due to too many failed attempts', {
-          username: credentials.username,
-          attempts: updatedUser.loginAttempts
-        });
+      if (!credentials.confirmPassword || credentials.password !== credentials.confirmPassword) {
+        this.logger?.warn(
+          { username: credentials.username },
+          'Registration failed: passwords do not match'
+        );
         return {
           success: false,
-          message: 'Too many failed login attempts. Account locked for 30 minutes.'
+          message: 'Passwords do not match'
         };
       }
 
-      this.logger?.warn('Failed login attempt', {
-        username: credentials.username,
-        attempts: (updatedUser?.loginAttempts || 0) + 1
-      });
+      this.logger?.debug({ username: credentials.username }, 'Password validation passed');
+
+      if (this.userRepository.userExists(credentials.username)) {
+        this.logger?.warn(
+          { username: credentials.username },
+          'Registration failed: username already exists'
+        );
+        return {
+          success: false,
+          message: 'Registration failed. Please try a different username.'
+        };
+      }
+
+      this.logger?.debug({ username: credentials.username }, 'Username availability check passed');
+
+      this.logger?.debug({ username: credentials.username }, 'Hashing password');
+      const passwordHash = await bcrypt.hash(credentials.password, this.saltRounds);
+
+      this.logger?.debug({ username: credentials.username }, 'Creating user in database');
+      const user = this.userRepository.createUser(credentials.username, passwordHash);
+
+      this.logger?.debug({ userId: user.id, username: user.username }, 'User created successfully, generating token');
+      const token = this.generateToken(user);
+
+      this.logger?.info(
+        { userId: user.id, username: user.username },
+        'User registered successfully'
+      );
+
+      return {
+        success: true,
+        message: 'Registration successful',
+        token,
+        user: { id: user.id!, username: user.username }
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : '';
+      this.logger?.error(
+        { error: errorMessage, stack: errorStack, username: credentials.username },
+        'Registration process failed with unexpected error'
+      );
       return {
         success: false,
-        message: 'Invalid credentials'
+        message: 'Registration failed. Please try again.'
       };
     }
+  }
 
-    // Reset login attempts on successful login
-    this.userRepository.resetLoginAttempts(credentials.username);
-    const token = this.generateToken(user);
+  async login(credentials: UserCredentials): Promise<AuthResult> {
+    try {
+      this.logger?.info({ username: credentials.username }, 'Starting login process');
 
-    this.logger?.info('User logged in successfully', {
-      userId: user.id,
-      username: user.username
-    });
+      const user = this.userRepository.findByUsername(credentials.username);
 
-    return {
-      success: true,
-      message: 'Login successful',
-      token,
-      user: { id: user.id!, username: user.username }
-    };
+      if (!user) {
+        this.logger?.warn(
+          { username: credentials.username },
+          'Login attempt with non-existent username'
+        );
+        return {
+          success: false,
+          message: 'Invalid credentials'
+        };
+      }
+
+      this.logger?.debug({ username: credentials.username }, 'User found in database');
+
+      // Check if account is locked
+      if (this.userRepository.isAccountLocked(user)) {
+        this.logger?.warn(
+          { userId: user.id, username: user.username },
+          'Login attempt on locked account'
+        );
+        return {
+          success: false,
+          message: 'Account is temporarily locked. Please try again later.'
+        };
+      }
+
+      this.logger?.debug({ username: credentials.username }, 'Comparing password');
+      const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+
+      if (!isPasswordValid) {
+        // Increment failed login attempts
+        this.logger?.debug({ username: credentials.username }, 'Password invalid, incrementing failed attempts');
+        this.userRepository.incrementLoginAttempts(credentials.username);
+        const updatedUser = this.userRepository.findByUsername(credentials.username);
+
+        if (updatedUser && updatedUser.loginAttempts! >= this.maxLoginAttempts) {
+          this.logger?.debug({ username: credentials.username }, 'Max attempts reached, locking account');
+          this.userRepository.lockAccount(credentials.username, this.lockoutDurationMinutes);
+          this.logger?.error(
+            { username: credentials.username, attempts: updatedUser.loginAttempts },
+            'Account locked due to too many failed attempts'
+          );
+          return {
+            success: false,
+            message: 'Too many failed login attempts. Account locked for 30 minutes.'
+          };
+        }
+
+        this.logger?.warn(
+          { username: credentials.username, attempts: (updatedUser?.loginAttempts || 0) },
+          'Failed login attempt'
+        );
+        return {
+          success: false,
+          message: 'Invalid credentials'
+        };
+      }
+
+      // Reset login attempts on successful login
+      this.logger?.debug({ username: credentials.username }, 'Password valid, resetting login attempts');
+      this.userRepository.resetLoginAttempts(credentials.username);
+      const token = this.generateToken(user);
+
+      this.logger?.info(
+        { userId: user.id, username: user.username },
+        'User logged in successfully'
+      );
+
+      return {
+        success: true,
+        message: 'Login successful',
+        token,
+        user: { id: user.id!, username: user.username }
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : '';
+      this.logger?.error(
+        { error: errorMessage, stack: errorStack, username: credentials.username },
+        'Login process failed with unexpected error'
+      );
+      return {
+        success: false,
+        message: 'Login failed. Please try again.'
+      };
+    }
   }
 
   private generateToken(user: User): string {

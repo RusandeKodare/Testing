@@ -68,4 +68,8 @@ export class DatabaseConfig {
       this.db = null;
     }
   }
+
+  persistChanges(): void {
+    this.save();
+  }
 }

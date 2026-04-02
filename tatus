@@ -1,0 +1,29 @@
+[33m149597b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Update security audit with refactoring changes
+[33m92881a4[m Refactor code and add AI instructions document
+[33m1d1e2c5[m Improve test coverage and quality
+[33me887226[m Update security audit with latest improvements and automation
+[33mc4be06d[m Add Git hook setup scripts for running tests on push
+[33m495917d[m Add GitHub Actions workflow for automated testing
+[33mae3b58d[m Add logout endpoint with token revocation
+[33mc5ff1e1[m Fix npm audit vulnerabilities
+[33m9a35f69[m refactor: consolidate security audit into single living document
+[33mdbe8504[m Security: lockout, logging, password policy, httpOnly cookies
+[33maf35051[m Add dashboard landing page after login
+[33md4eab23[m Add usage instructions to view-db script
+[33m2adf2de[m Add database viewer script
+[33mb7c94bb[m Add favicon to eliminate 404 error
+[33m0804567[m Fix CSP to allow backend API connections
+[33maf7c579[m Replace http-server with Express for frontend
+[33m823ac87[m Fix ES module imports - add .js extensions
+[33m9034597[m Update README with security information and AI collaboration notice
+[33me69f7a6[m Add comprehensive security documentation
+[33mc98820f[m Implement critical security fixes (OWASP Top 10)
+[33m8cf661f[m Add comprehensive README documentation
+[33m20eafec[m Add comprehensive test suite
+[33m9279193[m Fix TypeScript strict mode errors
+[33m258d1f6[m Add remaining backend and frontend code
+[33mc973083[m Initial commit: Add .gitignore
+[33m3fa6c23[m Add comprehensive test suite in separate project
+[33m606b7b4[m Add project configuration files
+[33m9a6582a[m Add AuthController for HTTP handling
+[33m71ffc01[m Add frontend entry point

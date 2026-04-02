@@ -1,8 +1,9 @@
 import { Database } from 'sql.js';
 import { User } from '../models/User';
+import { DatabaseConfig } from '../config/database';
 
 export class UserRepository {
-  constructor(private db: Database) {}
+  constructor(private db: Database, private dbConfig?: DatabaseConfig) {}
 
   createUser(username: string, passwordHash: string): User {
     const stmt = this.db.prepare(
@@ -11,6 +12,8 @@ export class UserRepository {
     
     stmt.run([username, passwordHash]);
     stmt.free();
+
+    this.dbConfig?.persistChanges();
 
     const result = this.db.exec(
       'SELECT id, username, password_hash, created_at, login_attempts, locked_until FROM users WHERE username = ?',
@@ -80,6 +83,7 @@ export class UserRepository {
     );
     stmt.run([username]);
     stmt.free();
+    this.dbConfig?.persistChanges();
   }
 
   lockAccount(username: string, lockDurationMinutes: number = 30): void {
@@ -89,6 +93,7 @@ export class UserRepository {
     );
     stmt.run([lockedUntil.toISOString(), username]);
     stmt.free();
+    this.dbConfig?.persistChanges();
   }
 
   resetLoginAttempts(username: string): void {
@@ -97,6 +102,7 @@ export class UserRepository {
     );
     stmt.run([username]);
     stmt.free();
+    this.dbConfig?.persistChanges();
   }
 
   isAccountLocked(user: User): boolean {
