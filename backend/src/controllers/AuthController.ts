@@ -82,4 +82,28 @@ export class AuthController {
       });
     }
   }
+
+  async logout(_req: Request, res: Response): Promise<void> {
+    try {
+      // Clear the auth cookie
+      res.clearCookie('authToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+      
+      this.logger?.info('User logged out successfully');
+      
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    } catch (error) {
+      this.logger?.error('Logout error', { error });
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  }
 }
