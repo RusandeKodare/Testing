@@ -32,6 +32,16 @@ export class Dashboard {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.logout());
     }
+
+    // Handle click on action buttons
+    const actionButtons = document.querySelectorAll('.action-btn');
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', () => this.showNotImplemented());
+    });
+  }
+
+  private showNotImplemented(): void {
+    alert('NOT YET IMPLEMENTED');
   }
 
   private logout(): void {
