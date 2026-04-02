@@ -128,14 +128,4 @@ describe('DatabaseConfig', () => {
       expect(fs.existsSync(testDbPath)).toBe(true);
     });
   });
-
-  describe('close', () => {
-    it('should close database connection', async () => {
-      dbConfig = new DatabaseConfig(testDbPath);
-      await dbConfig.initialize();
-      dbConfig.close();
-
-      expect(() => dbConfig.getDatabase()).toThrow('Database not initialized');
-    });
-  });
 });

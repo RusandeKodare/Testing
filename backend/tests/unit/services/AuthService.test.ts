@@ -12,6 +12,25 @@ describe('AuthService', () => {
     authService = new AuthService(mockUserRepository, 'test-secret', undefined);
   });
 
+  describe('constructor', () => {
+    it('should throw error when JWT secret is missing', () => {
+      expect(() => {
+        new AuthService(mockUserRepository, undefined, undefined);
+      }).toThrow('JWT secret is required');
+    });
+
+    it('should throw error when JWT secret is empty', () => {
+      expect(() => {
+        new AuthService(mockUserRepository, '', undefined);
+      }).toThrow('JWT secret is required');
+    });
+
+    it('should initialize successfully with valid JWT secret', () => {
+      const service = new AuthService(mockUserRepository, 'valid-secret', undefined);
+      expect(service).toBeDefined();
+    });
+  });
+
   describe('register', () => {
     it('should successfully register a new user', async () => {
       mockUserRepository.userExists.mockReturnValue(false);
