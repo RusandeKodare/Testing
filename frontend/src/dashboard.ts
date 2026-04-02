@@ -16,11 +16,13 @@ export class Dashboard {
   }
 
   private loadUserInfo(): void {
-    const usernameElements = document.querySelectorAll('#username, #username-detail');
+    // Update username in all locations
+    const usernameElements = document.querySelectorAll('#username, #username-detail, #username-hero, #username-nav');
     usernameElements.forEach(el => {
       if (el) el.textContent = this.username || 'User';
     });
 
+    // Update login time
     const loginTimeElement = document.getElementById('login-time');
     if (loginTimeElement) {
       loginTimeElement.textContent = new Date().toLocaleString();
@@ -28,18 +30,19 @@ export class Dashboard {
   }
 
   private setupEventListeners(): void {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => this.logout());
-    }
+    // Handle logout from both buttons
+    const logoutButtons = document.querySelectorAll('#logout-btn, .logout-btn-nav');
+    logoutButtons.forEach(btn => {
+      btn.addEventListener('click', () => this.logout());
+    });
 
     // Handle click on action buttons
-    const actionButtons = document.querySelectorAll('.action-btn');
+    const actionButtons = document.querySelectorAll('.action-btn-large');
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => this.showNotImplemented());
     });
 
-    // Handle profile avatar change
+    // Handle profile avatar change in hero section
     const changeAvatarBtn = document.getElementById('change-avatar-btn');
     const avatarInput = document.getElementById('avatar-input') as HTMLInputElement;
     
@@ -81,10 +84,11 @@ export class Dashboard {
       const dataUrl = event.target?.result as string;
       localStorage.setItem('profilePicture', dataUrl);
       
-      const avatarImg = document.getElementById('profile-avatar') as HTMLImageElement;
-      if (avatarImg) {
-        avatarImg.src = dataUrl;
-      }
+      // Update all avatar images
+      const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
+      avatarImages.forEach(img => {
+        img.src = dataUrl;
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -92,10 +96,10 @@ export class Dashboard {
   private loadProfilePicture(): void {
     const savedPicture = localStorage.getItem('profilePicture');
     if (savedPicture) {
-      const avatarImg = document.getElementById('profile-avatar') as HTMLImageElement;
-      if (avatarImg) {
-        avatarImg.src = savedPicture;
-      }
+      const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
+      avatarImages.forEach(img => {
+        img.src = savedPicture;
+      });
     }
   }
 
