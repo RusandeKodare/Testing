@@ -1,0 +1,71 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+    
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      env:
+        JWT_SECRET: test-secret-key-for-ci-testing-only
+        NODE_ENV: test
+      run: npm test
+    
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: npm test
+    
+    - name: Run security audit - backend
+      working-directory: ./backend
+      run: npm audit --audit-level=high
+      continue-on-error: true
+    
+    - name: Run security audit - frontend
+      working-directory: ./frontend
+      run: npm audit --audit-level=high
+      continue-on-error: true
+    
+    - name: Upload backend coverage
+      uses: actions/upload-artifact@v4
+      if: matrix.node-version == '20.x'
+      with:
+        name: backend-coverage
+        path: backend/coverage/
+    
+    - name: Upload frontend coverage
+      uses: actions/upload-artifact@v4
+      if: matrix.node-version == '20.x'
+      with:
+        name: frontend-coverage
+        path: frontend/coverage/
