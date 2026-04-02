@@ -273,5 +273,48 @@ describe('AuthService', () => {
       expect(result.message).toBe('Passwords do not match');
       expect(mockUserRepository.createUser).not.toHaveBeenCalled();
     });
+
+    it('should handle registration errors gracefully', async () => {
+      mockUserRepository.userExists.mockReturnValue(false);
+      mockUserRepository.createUser.mockImplementation(() => {
+        throw new Error('Database error');
+      });
+
+      const result = await authService.register({
+        username: 'testuser',
+        password: 'password123',
+        confirmPassword: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Registration failed. Please try again.');
+      expect(result.token).toBeUndefined();
+    });
+
+    it('should handle login errors gracefully', async () => {
+      mockUserRepository.findByUsername.mockImplementation(() => {
+        throw new Error('Database error');
+      });
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Login failed. Please try again.');
+      expect(result.token).toBeUndefined();
+    });
+
+    it('should reject registration with missing confirmPassword', async () => {
+      const result = await authService.register({
+        username: 'testuser',
+        password: 'password123',
+        confirmPassword: undefined as any
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Passwords do not match');
+    });
   });
 });

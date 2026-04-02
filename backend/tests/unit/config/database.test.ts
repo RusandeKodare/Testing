@@ -88,5 +88,54 @@ describe('DatabaseConfig', () => {
 
       expect(() => dbConfig.getDatabase()).toThrow('Database not initialized');
     });
+
+    it('should save database to file', async () => {
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+      dbConfig.save();
+
+      expect(fs.existsSync(testDbPath)).toBe(true);
+    });
+
+    it('should create directory if it does not exist', async () => {
+      const nestedPath = './test-dir/nested/db.sqlite';
+      dbConfig = new DatabaseConfig(nestedPath);
+      await dbConfig.initialize();
+      dbConfig.save();
+
+      expect(fs.existsSync(nestedPath)).toBe(true);
+      
+      // Cleanup
+      dbConfig.close();
+      if (fs.existsSync(nestedPath)) {
+        fs.unlinkSync(nestedPath);
+      }
+      if (fs.existsSync('./test-dir/nested')) {
+        fs.rmdirSync('./test-dir/nested');
+      }
+      if (fs.existsSync('./test-dir')) {
+        fs.rmdirSync('./test-dir');
+      }
+    });
+  });
+
+  describe('persistChanges', () => {
+    it('should persist changes to database file', async () => {
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+      dbConfig.persistChanges();
+
+      expect(fs.existsSync(testDbPath)).toBe(true);
+    });
+  });
+
+  describe('close', () => {
+    it('should close database connection', async () => {
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+      dbConfig.close();
+
+      expect(() => dbConfig.getDatabase()).toThrow('Database not initialized');
+    });
   });
 });
