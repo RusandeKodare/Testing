@@ -48,6 +48,12 @@ describe('AuthController', () => {
         success: true,
         message: 'Registration successful'
       }));
+      expect(mockResponse.cookie).toHaveBeenCalledWith('authToken', 'token123', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+        maxAge: 3600000
+      });
     });
 
     it('should return 400 when username is missing', async () => {
@@ -121,6 +127,12 @@ describe('AuthController', () => {
         success: true,
         message: 'Login successful'
       }));
+      expect(mockResponse.cookie).toHaveBeenCalledWith('authToken', 'token123', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+        maxAge: 3600000
+      });
     });
 
     it('should return 400 when username is missing', async () => {
@@ -168,6 +180,58 @@ describe('AuthController', () => {
       mockAuthService.login.mockRejectedValue(new Error('Database error'));
 
       await authController.login(mockRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: 'Internal server error'
+      });
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear auth cookie and return success', async () => {
+      const clearCookieMock = jest.fn();
+      mockResponse.clearCookie = clearCookieMock;
+
+      await authController.logout(mockRequest as Request, mockResponse as Response);
+
+      expect(clearCookieMock).toHaveBeenCalledWith('authToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict'
+      });
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    });
+
+    it('should use secure cookie in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      
+      const clearCookieMock = jest.fn();
+      mockResponse.clearCookie = clearCookieMock;
+
+      await authController.logout(mockRequest as Request, mockResponse as Response);
+
+      expect(clearCookieMock).toHaveBeenCalledWith('authToken', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      });
+      
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should return 500 on error', async () => {
+      mockResponse.clearCookie = jest.fn().mockImplementation(() => {
+        throw new Error('Cookie error');
+      });
+
+      await authController.logout(mockRequest as Request, mockResponse as Response);
 
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({

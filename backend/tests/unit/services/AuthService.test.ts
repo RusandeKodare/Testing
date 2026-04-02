@@ -165,4 +165,113 @@ describe('AuthService', () => {
       expect(verified).toBeNull();
     });
   });
+
+  describe('account lockout', () => {
+    it('should reject login when account is locked', async () => {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('password123', 10);
+
+      mockUserRepository.findByUsername.mockReturnValue({
+        id: 1,
+        username: 'testuser',
+        passwordHash: hashedPassword,
+        createdAt: new Date(),
+        loginAttempts: 5,
+        lockedUntil: new Date(Date.now() + 30 * 60 * 1000) // Locked for 30 minutes
+      });
+      mockUserRepository.isAccountLocked.mockReturnValue(true);
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('locked');
+      expect(mockUserRepository.incrementLoginAttempts).not.toHaveBeenCalled();
+    });
+
+    it('should increment login attempts on failed login', async () => {
+      mockUserRepository.findByUsername.mockReturnValue({
+        id: 1,
+        username: 'testuser',
+        passwordHash: 'hashedpassword',
+        createdAt: new Date(),
+        loginAttempts: 2
+      });
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'wrongpassword'
+      });
+
+      expect(result.success).toBe(false);
+      expect(mockUserRepository.incrementLoginAttempts).toHaveBeenCalledWith('testuser');
+    });
+
+    it('should lock account after 5 failed attempts', async () => {
+      const userBefore = {
+        id: 1,
+        username: 'testuser',
+        passwordHash: 'hashedpassword',
+        createdAt: new Date(),
+        loginAttempts: 4
+      };
+      
+      const userAfter = {
+        ...userBefore,
+        loginAttempts: 5
+      };
+      
+      // First call returns user with 4 attempts, second call (after increment) returns 5
+      mockUserRepository.findByUsername
+        .mockReturnValueOnce(userBefore)
+        .mockReturnValueOnce(userAfter);
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'wrongpassword'
+      });
+
+      expect(result.success).toBe(false);
+      expect(mockUserRepository.incrementLoginAttempts).toHaveBeenCalledWith('testuser');
+      expect(mockUserRepository.lockAccount).toHaveBeenCalledWith('testuser', 30);
+    });
+
+    it('should reset login attempts on successful login', async () => {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('password123', 10);
+
+      mockUserRepository.findByUsername.mockReturnValue({
+        id: 1,
+        username: 'testuser',
+        passwordHash: hashedPassword,
+        createdAt: new Date(),
+        loginAttempts: 3
+      });
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepository.resetLoginAttempts).toHaveBeenCalledWith('testuser');
+    });
+
+    it('should reject registration when passwords do not match', async () => {
+      const result = await authService.register({
+        username: 'testuser',
+        password: 'password123',
+        confirmPassword: 'differentpassword'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Passwords do not match');
+      expect(mockUserRepository.createUser).not.toHaveBeenCalled();
+    });
+  });
 });
