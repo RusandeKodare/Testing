@@ -17,5 +17,6 @@ module.exports = {
     }
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  verbose: false
+  verbose: false,
+  maxWorkers: '50%'
 };

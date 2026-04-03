@@ -130,6 +130,12 @@ cd frontend
 npm test
 ```
 
+If backend tests report worker teardown/open-handle warnings:
+```bash
+cd backend
+npm run test:detect-open-handles
+```
+
 Current counts:
 - Backend: 126 tests
 - Frontend: 35 tests
