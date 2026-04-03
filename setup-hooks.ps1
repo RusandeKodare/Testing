@@ -6,7 +6,7 @@ Write-Host "Installing Git hooks..." -ForegroundColor Cyan
 # Create the pre-commit hook
 $hookContent = @'
 #!/bin/sh
-# Pre-commit hook to validate build + tests before commit
+# Pre-commit hook to validate build + type checks + audits before commit
 
 echo "Running pre-commit checks..."
 echo "========================"
@@ -75,38 +75,6 @@ fi
 
 echo "[OK] Frontend type-check passed"
 
-# Test backend
-echo ""
-echo "Testing backend..."
-cd ../backend || exit 1
-npm test --silent
-BACKEND_EXIT_CODE=$?
-
-if [ $BACKEND_EXIT_CODE -ne 0 ]; then
-  echo ""
-  echo "[ERROR] Backend tests failed!"
-  echo "Commit aborted. Please fix failing tests before committing."
-  exit 1
-fi
-
-echo "[OK] Backend tests passed"
-
-# Test frontend
-echo ""
-echo "Testing frontend..."
-cd ../frontend || exit 1
-npm test --silent
-FRONTEND_EXIT_CODE=$?
-
-if [ $FRONTEND_EXIT_CODE -ne 0 ]; then
-  echo ""
-  echo "[ERROR] Frontend tests failed!"
-  echo "Commit aborted. Please fix failing tests before committing."
-  exit 1
-fi
-
-echo "[OK] Frontend tests passed"
-
 # Audit backend dependencies
 echo ""
 echo "Auditing backend dependencies..."
@@ -151,5 +119,6 @@ $hookContent | Out-File -FilePath $hookPath -Encoding ASCII -NoNewline
 
 Write-Host "[OK] Git hooks installed successfully!" -ForegroundColor Green
 Write-Host ""
-Write-Host "The pre-commit hook will now build, type-check, test, and audit backend + frontend before each commit."
+Write-Host "The pre-commit hook will now build, type-check, and audit backend + frontend before each commit."
+Write-Host "Tests run in CI workflows instead of at commit-time."
 Write-Host "To bypass the hook temporarily, use: git commit --no-verify"
