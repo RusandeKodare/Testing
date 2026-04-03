@@ -37,15 +37,20 @@ export class DiaryRepository {
 
     this.dbConfig?.persistChanges();
 
-    const idResult = this.db.exec('SELECT last_insert_rowid() AS id');
-    const entryId = idResult[0].values[0][0] as number;
+    const createdResult = this.db.exec(
+      `SELECT id, user_id, title, content, mood, tags_json, is_favorite, entry_date, created_at, updated_at
+       FROM diary_entries
+       WHERE user_id = ?
+       ORDER BY id DESC
+       LIMIT 1`,
+      [userId]
+    );
 
-    const created = this.findEntryById(entryId, userId);
-    if (!created) {
+    if (createdResult.length === 0 || createdResult[0].values.length === 0) {
       throw new Error('Failed to load created diary entry');
     }
 
-    return created;
+    return this.mapRow(createdResult[0].values[0] as unknown as RawDiaryRow);
   }
 
   findEntryById(entryId: number, userId: number): DiaryEntry | null {
