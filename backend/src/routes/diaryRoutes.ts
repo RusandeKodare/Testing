@@ -49,18 +49,18 @@ function normalizeTags(value: unknown): string[] {
   return Array.from(unique);
 }
 
-function parseEntryDate(value: unknown): Date {
+function parseEntryDate(value: unknown, fieldName = 'entryDate'): Date {
   if (!value) {
     return new Date();
   }
 
   if (typeof value !== 'string') {
-    throw new Error('entryDate must be an ISO date string');
+    throw new Error(`${fieldName} must be an ISO date string`);
   }
 
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error('entryDate must be a valid date');
+    throw new Error(`${fieldName} must be a valid date`);
   }
 
   return parsed;
@@ -92,7 +92,7 @@ function validateEntryPayload(payload: any): CreateDiaryEntryInput | UpdateDiary
     mood: normalizedMood,
     tags: normalizeTags(payload?.tags),
     isFavorite: parseBoolean(payload?.isFavorite),
-    entryDate: parseEntryDate(payload?.entryDate)
+    entryDate: parseEntryDate(payload?.entryDate, 'entryDate')
   };
 }
 
@@ -120,8 +120,8 @@ function parseListQuery(query: any): DiaryEntryQuery {
     throw new Error('Tag filter must be 1-20 chars and contain only letters, numbers, underscore, or hyphen');
   }
 
-  const fromDate = query?.from ? parseEntryDate(query.from) : undefined;
-  const toDate = query?.to ? parseEntryDate(query.to) : undefined;
+  const fromDate = query?.from ? parseEntryDate(query.from, 'from') : undefined;
+  const toDate = query?.to ? parseEntryDate(query.to, 'to') : undefined;
 
   return {
     search: search || undefined,

@@ -84,7 +84,15 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolveClientKey,
-  skip: (req) => req.method === 'GET' && req.path === '/csrf'
+});
+
+const csrfLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: 'Too many CSRF token requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 const profileLimiter = rateLimit({
@@ -160,6 +168,7 @@ async function startServer() {
     }
   }
 
+  app.use('/api/auth/csrf', csrfLimiter);
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
   app.use('/api/profile', profileLimiter, createProfileRoutes(userRepository, JWT_SECRET));
   app.use('/api/diary', diaryLimiter, createDiaryRoutes(diaryRepository, JWT_SECRET));

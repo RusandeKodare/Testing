@@ -35,15 +35,20 @@ export class DiaryRepository {
     ]);
     stmt.free();
 
+    const insertedIdResult = this.db.exec('SELECT last_insert_rowid() AS id');
+    if (insertedIdResult.length === 0 || insertedIdResult[0].values.length === 0) {
+      throw new Error('Failed to determine created diary entry id');
+    }
+
+    const createdEntryId = Number(insertedIdResult[0].values[0][0]);
+
     this.dbConfig?.persistChanges();
 
     const createdResult = this.db.exec(
       `SELECT id, user_id, title, content, mood, tags_json, is_favorite, entry_date, created_at, updated_at
        FROM diary_entries
-       WHERE user_id = ?
-       ORDER BY id DESC
-       LIMIT 1`,
-      [userId]
+       WHERE id = ? AND user_id = ?`,
+      [createdEntryId, userId]
     );
 
     if (createdResult.length === 0 || createdResult[0].values.length === 0) {

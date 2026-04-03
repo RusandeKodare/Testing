@@ -269,6 +269,40 @@ describe('diaryRoutes', () => {
     expect(json).toHaveBeenCalledWith({ success: false, message: 'Search term must be 120 characters or fewer' });
   });
 
+  it('rejects invalid from date with field-specific message', async () => {
+    const router = createDiaryRoutes(repo as any, 'secret');
+    const handler = getRouteHandler(router, '/entries', 'get');
+    const { res, status, json } = createRes();
+
+    await handler(
+      {
+        user: { userId: 2 },
+        query: { from: 'not-a-date' }
+      },
+      res
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'from must be a valid date' });
+  });
+
+  it('rejects invalid to date with field-specific message', async () => {
+    const router = createDiaryRoutes(repo as any, 'secret');
+    const handler = getRouteHandler(router, '/entries', 'get');
+    const { res, status, json } = createRes();
+
+    await handler(
+      {
+        user: { userId: 2 },
+        query: { to: 'invalid' }
+      },
+      res
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'to must be a valid date' });
+  });
+
   it('returns 500 when repository fails during list', async () => {
     const router = createDiaryRoutes(repo as any, 'secret');
     const handler = getRouteHandler(router, '/entries', 'get');

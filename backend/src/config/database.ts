@@ -12,26 +12,30 @@ export class DatabaseConfig {
 
   async initialize(): Promise<void> {
     const SQL = await initSqlJs();
+    const dbFileExists = fs.existsSync(this.dbPath);
     
-    if (fs.existsSync(this.dbPath)) {
+    if (dbFileExists) {
       const buffer = fs.readFileSync(this.dbPath);
       this.db = new SQL.Database(buffer);
     } else {
       this.db = new SQL.Database();
     }
 
-    this.createTables();
+    const createdTables = this.createTables();
     const migrated = this.migrateSchema();
     this.ensureIndexes();
-    if (migrated || !fs.existsSync(this.dbPath)) {
+    if (createdTables || migrated || !dbFileExists) {
       this.save();
     }
   }
 
-  private createTables(): void {
+  private createTables(): boolean {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
+
+    const hadUsersTable = this.tableExists('users');
+    const hadDiaryEntriesTable = this.tableExists('diary_entries');
 
     this.db.run(`
       CREATE TABLE IF NOT EXISTS users (
@@ -63,7 +67,21 @@ export class DatabaseConfig {
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
-    
+
+    return !hadUsersTable || !hadDiaryEntriesTable;
+  }
+
+  private tableExists(tableName: string): boolean {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const result = this.db.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+      [tableName]
+    );
+
+    return result.length > 0 && result[0].values.length > 0;
   }
 
   private ensureIndexes(): void {
