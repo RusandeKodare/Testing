@@ -9,6 +9,13 @@ cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/sh
 # Pre-commit hook to validate build + type checks + audits before commit
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+  echo "[ERROR] Unable to resolve repository root"
+  exit 1
+fi
+cd "$REPO_ROOT" || exit 1
+
 echo "Running pre-commit checks..."
 echo "========================"
 
@@ -122,6 +129,13 @@ chmod +x .git/hooks/pre-commit
 cat > .git/hooks/pre-push << 'EOF'
 #!/bin/sh
 # Pre-push hook to validate test suites before push
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+  echo "[ERROR] Unable to resolve repository root"
+  exit 1
+fi
+cd "$REPO_ROOT" || exit 1
 
 echo "Running pre-push checks..."
 echo "========================"
