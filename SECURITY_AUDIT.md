@@ -35,8 +35,6 @@ Newly identified risks:
 Recently remediated:
 - Frontend no longer stores JWT in localStorage; cookie-based auth with `credentials: 'include'` is used.
 - OAuth `state` is no longer returned from `/api/oauth/google/login`.
-- Profile picture input validation should be tightened to strict MIME whitelist and decoded-content verification.
-- Profile routes currently do not have dedicated rate-limiting middleware.
 
 ## OWASP Top 10 Review
 

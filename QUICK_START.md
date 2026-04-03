@@ -72,7 +72,7 @@ You should see the dark-themed login page!
 ### Try Registering a New User:
 1. Click the "Register" tab
 2. Enter username: `testuser` (min 3 characters, alphanumeric)
-3. Enter password: `password123` (min 8 characters with at least 1 number)
+3. Enter password: `SecurePass1!` (min 8 chars with uppercase, lowercase, number, special char)
 4. Click "Register"
 5. You should see "Registration successful" ✅
 
@@ -175,9 +175,12 @@ When both servers are running:
 - **Backend API**: http://localhost:3000
   - POST /api/auth/register
   - POST /api/auth/login
+  - POST /api/auth/logout
+  - GET /api/oauth/google/login
+  - GET /api/oauth/google/callback
 
 - **Frontend UI**: http://localhost:3001
-  - Login/Register page
+  - Login/Register page + Dashboard
 
 ---
 
@@ -187,8 +190,9 @@ After starting:
 1. ✅ Open http://localhost:3001
 2. ✅ Register a new account
 3. ✅ Login with your credentials
-4. ✅ Check browser console for JWT token
+4. ✅ (Optional) Trigger Google OAuth from the login UI once provider credentials are configured
 5. ✅ Review `SECURITY_AUDIT.md` for security considerations
+6. ✅ Review `OAuth_Status_and_Roadmap.md` for OAuth hardening backlog
 
 ---
 

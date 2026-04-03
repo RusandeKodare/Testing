@@ -10,6 +10,7 @@ Current snapshot (April 3, 2026):
 - No known npm dependency vulnerabilities in backend/frontend (`npm audit` clean).
 - OAuth state validation is enforced server-side.
 - Profile picture routes require authenticated user context from JWT.
+- Frontend auth flow uses secure cookie-based session handling (`credentials: include`).
 
 ## Main Features
 
@@ -164,8 +165,12 @@ powershell -ExecutionPolicy Bypass -File .\setup-hooks.ps1
 Pre-commit checks:
 1. Build backend
 2. Build frontend
-3. Run backend tests
-4. Run frontend tests
+3. Type-check backend (`npx tsc --noEmit`)
+4. Type-check frontend (`npx tsc --noEmit`)
+5. Run backend tests
+6. Run frontend tests
+7. Audit backend dependencies (`npm audit --audit-level=high`)
+8. Audit frontend dependencies (`npm audit --audit-level=high`)
 
 Bypass (only when absolutely necessary):
 ```bash
@@ -189,9 +194,11 @@ For Google OAuth:
 - Passwords are hashed with bcrypt.
 - SQL queries are parameterized.
 - Helmet and CORS restrictions are configured.
-- The frontend currently stores the returned JWT in localStorage for bearer requests in dashboard flows. Keep CSP strict and consider full cookie-only auth for reducing XSS token exposure.
+- Frontend authenticated requests use cookies (`credentials: 'include'`) and do not rely on localStorage token storage.
 
 Detailed and current risk tracking is in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
+
+OAuth implementation status and remaining hardening work are tracked in [OAuth_Status_and_Roadmap.md](OAuth_Status_and_Roadmap.md).
 
 ## License
 
