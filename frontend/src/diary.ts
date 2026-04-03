@@ -120,6 +120,14 @@ class DiaryPage {
       return;
     }
 
+    const closeOpenMenus = (): void => {
+      menus.forEach((menu) => {
+        if (menu.open) {
+          menu.removeAttribute('open');
+        }
+      });
+    };
+
     document.addEventListener('click', (event) => {
       const target = event.target as Node | null;
       menus.forEach((menu) => {
@@ -127,6 +135,12 @@ class DiaryPage {
           menu.removeAttribute('open');
         }
       });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeOpenMenus();
+      }
     });
   }
 

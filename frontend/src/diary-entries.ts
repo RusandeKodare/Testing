@@ -6,6 +6,7 @@ const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3
 
 class DiaryEntriesPage {
   private api = new DiaryApiService();
+  private filterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   async initialize(): Promise<void> {
     void reportBackendHealth('backend-status-dashboard');
@@ -57,16 +58,19 @@ class DiaryEntriesPage {
   }
 
   private setupEventListeners(): void {
-    const filters = document.querySelectorAll('.diary-filter');
+    const filters = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('.diary-filter');
     const logoutButton = document.getElementById('logout-btn') as HTMLButtonElement | null;
 
     filters.forEach((input) => {
       input.addEventListener('change', () => {
         void this.loadEntries();
       });
-      input.addEventListener('input', () => {
-        void this.loadEntries();
-      });
+
+      if (input.tagName === 'INPUT' && (input as HTMLInputElement).type === 'text') {
+        input.addEventListener('input', () => {
+          this.scheduleEntriesReload();
+        });
+      }
     });
 
     if (logoutButton) {
@@ -78,11 +82,30 @@ class DiaryEntriesPage {
     this.setupProfileMenuBehavior();
   }
 
+  private scheduleEntriesReload(): void {
+    if (this.filterDebounceTimer) {
+      clearTimeout(this.filterDebounceTimer);
+    }
+
+    this.filterDebounceTimer = setTimeout(() => {
+      void this.loadEntries();
+      this.filterDebounceTimer = null;
+    }, 250);
+  }
+
   private setupProfileMenuBehavior(): void {
     const menus = Array.from(document.querySelectorAll<HTMLDetailsElement>('.profile-menu'));
     if (!menus.length) {
       return;
     }
+
+    const closeOpenMenus = (): void => {
+      menus.forEach((menu) => {
+        if (menu.open) {
+          menu.removeAttribute('open');
+        }
+      });
+    };
 
     document.addEventListener('click', (event) => {
       const target = event.target as Node | null;
@@ -91,6 +114,12 @@ class DiaryEntriesPage {
           menu.removeAttribute('open');
         }
       });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeOpenMenus();
+      }
     });
   }
 
