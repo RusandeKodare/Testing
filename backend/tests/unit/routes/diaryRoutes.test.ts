@@ -281,7 +281,7 @@ describe('diaryRoutes', () => {
     await handler({ user: { userId: 3 }, query: {} }, res);
 
     expect(status).toHaveBeenCalledWith(500);
-    expect(json).toHaveBeenCalledWith({ success: false, message: 'db read failure' });
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'Failed to list diary entries' });
   });
 
   it('rejects create payload with invalid tags', async () => {
@@ -327,7 +327,7 @@ describe('diaryRoutes', () => {
     );
 
     expect(status).toHaveBeenCalledWith(500);
-    expect(json).toHaveBeenCalledWith({ success: false, message: 'insert failure' });
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'Failed to create diary entry' });
   });
 
   it('rejects invalid entry id when fetching one entry', async () => {
@@ -378,7 +378,7 @@ describe('diaryRoutes', () => {
     );
 
     expect(status).toHaveBeenCalledWith(500);
-    expect(json).toHaveBeenCalledWith({ success: false, message: 'update failure' });
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'Failed to update diary entry' });
   });
 
   it('rejects invalid entry id when deleting', async () => {

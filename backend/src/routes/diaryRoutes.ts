@@ -163,12 +163,16 @@ export function createDiaryRoutes(diaryRepository: DiaryRepository, jwtSecret: s
         }
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to list diary entries';
-      const status = message.includes('must be') || message.includes('No more than') ? 400 : 500;
-      if (status === 500) {
-        logger.error({ message }, 'Failed to list diary entries');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isValidationError = errorMessage.includes('must be') || errorMessage.includes('No more than');
+
+      if (isValidationError) {
+        res.status(400).json({ success: false, message: errorMessage });
+        return;
       }
-      res.status(status).json({ success: false, message });
+
+      logger.error({ message: errorMessage }, 'Failed to list diary entries');
+      res.status(500).json({ success: false, message: 'Failed to list diary entries' });
     }
   });
 
@@ -185,12 +189,16 @@ export function createDiaryRoutes(diaryRepository: DiaryRepository, jwtSecret: s
 
       res.status(201).json({ success: true, entry });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create diary entry';
-      const status = message.includes('must be') || message.includes('No more than') ? 400 : 500;
-      if (status === 500) {
-        logger.error({ message }, 'Failed to create diary entry');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isValidationError = errorMessage.includes('must be') || errorMessage.includes('No more than');
+
+      if (isValidationError) {
+        res.status(400).json({ success: false, message: errorMessage });
+        return;
       }
-      res.status(status).json({ success: false, message });
+
+      logger.error({ message: errorMessage }, 'Failed to create diary entry');
+      res.status(500).json({ success: false, message: 'Failed to create diary entry' });
     }
   });
 
@@ -246,12 +254,16 @@ export function createDiaryRoutes(diaryRepository: DiaryRepository, jwtSecret: s
 
       res.status(200).json({ success: true, entry });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update diary entry';
-      const status = message.includes('must be') || message.includes('No more than') ? 400 : 500;
-      if (status === 500) {
-        logger.error({ message }, 'Failed to update diary entry');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isValidationError = errorMessage.includes('must be') || errorMessage.includes('No more than');
+
+      if (isValidationError) {
+        res.status(400).json({ success: false, message: errorMessage });
+        return;
       }
-      res.status(status).json({ success: false, message });
+
+      logger.error({ message: errorMessage }, 'Failed to update diary entry');
+      res.status(500).json({ success: false, message: 'Failed to update diary entry' });
     }
   });
 
