@@ -18,6 +18,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
 import { DiaryRepository } from './repositories/DiaryRepository';
+import { getOAuthConfigLogDecision } from './utils/oauthConfigStatus';
 
 dotenv.config();
 
@@ -161,15 +162,26 @@ async function startServer() {
     );
     app.use('/api/oauth', oauthLimiter, createOAuthRoutes(oauthService, JWT_SECRET));
   } else {
-    if (process.env.NODE_ENV === 'development') {
-      logger.info('Google OAuth credentials not configured. OAuth login is disabled in development until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.');
-    } else {
-      logger.warn('Google OAuth credentials not configured - OAuth login disabled');
-    }
+    const oauthLogDecision = getOAuthConfigLogDecision(
+      process.env.NODE_ENV,
+      Boolean(googleClientId),
+      Boolean(googleClientSecret)
+    );
+    logger[oauthLogDecision.level](oauthLogDecision.message);
   }
 
   app.use('/api/auth/csrf', csrfLimiter);
-  app.use('/api/auth', authLimiter, createAuthRoutes(authController));
+  app.use(
+    '/api/auth',
+    (req, res, next) => {
+      if (req.method === 'GET' && req.path === '/csrf') {
+        return next();
+      }
+
+      return authLimiter(req, res, next);
+    },
+    createAuthRoutes(authController)
+  );
   app.use('/api/profile', profileLimiter, createProfileRoutes(userRepository, JWT_SECRET));
   app.use('/api/diary', diaryLimiter, createDiaryRoutes(diaryRepository, JWT_SECRET));
   app.use('/api/health', createHealthRoutes());

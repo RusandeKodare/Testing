@@ -2,6 +2,7 @@ import { reportBackendHealth } from './utils/backendHealth.js';
 import { initializeCsrfToken } from './utils/csrf.js';
 import { DiaryApiService } from './services/DiaryApiService.js';
 import { setupProfileMenuBehavior } from './utils/profileMenu.js';
+import { toLocalDateTimeInputValue } from './utils/dateTimeLocal.js';
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
@@ -182,7 +183,7 @@ class DiaryPage {
     if (moodInput) moodInput.value = entry.mood || '';
     if (tagsInput) tagsInput.value = entry.tags.join(', ');
     if (favoriteInput) favoriteInput.checked = entry.isFavorite;
-    if (dateInput) dateInput.value = entry.entryDate.slice(0, 16);
+    if (dateInput) dateInput.value = toLocalDateTimeInputValue(entry.entryDate);
     if (submitButton) submitButton.textContent = 'Update Entry';
   }
 

@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
-    "test": "jest --maxWorkers=50%",
+    "test": "jest",
     "test:detect-open-handles": "jest --runInBand --detectOpenHandles",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",

@@ -5,35 +5,30 @@ export async function initializeCsrfToken(): Promise<void> {
     return;
   }
 
-  let lastStatus: number | null = null;
-  let lastError: unknown = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    let response: Response;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
+      response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
         method: 'GET',
         credentials: 'include'
       });
-
-      if (response.ok) {
-        return;
-      }
-
-      lastStatus = response.status;
+    } catch {
       if (attempt === 1) {
-        throw new Error(`CSRF initialization failed with status ${lastStatus}`);
-      }
-    } catch (error) {
-      lastError = error;
-      if (attempt === 1) {
-        if (lastStatus !== null) {
-          throw new Error(`CSRF initialization failed with status ${lastStatus}`);
-        }
         throw new Error('CSRF initialization failed due to network error');
       }
+
+      continue;
+    }
+
+    if (response.ok) {
+      return;
+    }
+
+    if (attempt === 1) {
+      throw new Error(`CSRF initialization failed with status ${response.status}`);
     }
   }
-
-  throw new Error(`CSRF initialization failed: ${String(lastError || 'unknown error')}`);
 }
 
 export function getCsrfTokenFromCookie(): string {
