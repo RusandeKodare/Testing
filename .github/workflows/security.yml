@@ -145,7 +145,7 @@ jobs:
       - name: Start backend API
         working-directory: ./backend
         env:
-          JWT_SECRET: test-secret-key-for-zap
+          JWT_SECRET: test-secret-key-for-zap-0123456789abcdef
           NODE_ENV: test
         run: |
           nohup npm run dev > ../backend-zap.log 2>&1 &
@@ -157,19 +157,37 @@ jobs:
 
       - name: Wait for backend and frontend
         run: |
+          backend_ok=false
           for i in {1..40}; do
             if curl -fsS http://localhost:3000/api/health > /dev/null; then
+              backend_ok=true
               break
             fi
             sleep 2
           done
 
+          if [ "$backend_ok" != "true" ]; then
+            echo "Backend failed health check after waiting."
+            echo "--- backend-zap.log (last 200 lines) ---"
+            tail -n 200 backend-zap.log || true
+            exit 1
+          fi
+
+          frontend_ok=false
           for i in {1..40}; do
             if curl -fsS http://localhost:3001/ > /dev/null; then
+              frontend_ok=true
               break
             fi
             sleep 2
           done
+
+          if [ "$frontend_ok" != "true" ]; then
+            echo "Frontend failed health check after waiting."
+            echo "--- frontend-zap.log (last 200 lines) ---"
+            tail -n 200 frontend-zap.log || true
+            exit 1
+          fi
 
           curl -fsS http://localhost:3000/api/health > /dev/null
           curl -fsS http://localhost:3001/ > /dev/null
