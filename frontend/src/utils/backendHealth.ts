@@ -7,7 +7,7 @@ export interface BackendHealthResult {
   message: string;
 }
 
-const DEFAULT_HEALTH_URL = 'http://localhost:3000/api/health';
+const DEFAULT_HEALTH_URL = `${window.location.protocol}//${window.location.hostname}:3000/api/health`;
 
 export async function checkBackendHealth(healthUrl: string = DEFAULT_HEALTH_URL): Promise<BackendHealthResult> {
   try {

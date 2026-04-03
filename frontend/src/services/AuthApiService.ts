@@ -17,7 +17,7 @@ export interface UserCredentials {
 export class AuthApiService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:3000/api/auth') {
+  constructor(baseUrl: string = `${window.location.protocol}//${window.location.hostname}:3000/api/auth`) {
     this.baseUrl = baseUrl;
   }
 

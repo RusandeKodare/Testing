@@ -52,7 +52,7 @@ export class AuthController {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : '';
       this.logger?.error(
-        { error: errorMessage, stack: errorStack, username: req.body.username },
+        { error: errorMessage, stack: process.env.NODE_ENV === 'production' ? undefined : errorStack, username: req.body.username },
         'Registration error - unexpected exception'
       );
       res.status(500).json({
@@ -98,7 +98,7 @@ export class AuthController {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : '';
       this.logger?.error(
-        { error: errorMessage, stack: errorStack, username: req.body.username },
+        { error: errorMessage, stack: process.env.NODE_ENV === 'production' ? undefined : errorStack, username: req.body.username },
         'Login error - unexpected exception'
       );
       res.status(500).json({

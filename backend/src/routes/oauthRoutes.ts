@@ -1,9 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { OAuthService } from '../services/OAuthService';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { getLogger } from '../utils/logger';
 
 const logger = getLogger('oauth');
+
+function createRequestBinding(req: Request): string {
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  return crypto.createHash('sha256').update(String(userAgent)).digest('hex');
+}
 
 export function createOAuthRoutes(
   oauthService: OAuthService,
@@ -12,12 +18,19 @@ export function createOAuthRoutes(
   const router = Router();
 
   // Initiate Google OAuth flow
-  router.get('/google/login', (_req: Request, res: Response) => {
+  router.get('/google/login', (req: Request, res: Response) => {
     try {
       const state = OAuthService.generateState();
+      const binding = createRequestBinding(req);
 
       // Store state server-side for callback validation.
       res.cookie('oauth_state', state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000,
+      });
+      res.cookie('oauth_state_binding', binding, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -31,7 +44,7 @@ export function createOAuthRoutes(
         authUrl,
       });
     } catch (error) {
-      logger.error({ error }, 'Failed to generate OAuth URL');
+      logger.error({ message: error instanceof Error ? error.message : String(error) }, 'Failed to generate OAuth URL');
       res.status(500).json({
         success: false,
         message: 'Failed to initiate OAuth flow',
@@ -61,7 +74,9 @@ export function createOAuthRoutes(
       }
 
       const expectedState = req.cookies?.oauth_state as string | undefined;
-      if (!expectedState || expectedState !== state) {
+      const expectedBinding = req.cookies?.oauth_state_binding as string | undefined;
+      const currentBinding = createRequestBinding(req);
+      if (!expectedState || expectedState !== state || !expectedBinding || expectedBinding !== currentBinding) {
         res.status(400).json({
           success: false,
           message: 'Invalid OAuth state',
@@ -70,6 +85,7 @@ export function createOAuthRoutes(
       }
 
       res.clearCookie('oauth_state');
+      res.clearCookie('oauth_state_binding');
 
       const { user, isNewUser } = await oauthService.handleCallback(code);
 
@@ -106,7 +122,7 @@ export function createOAuthRoutes(
         isNewUser,
       });
     } catch (error) {
-      logger.error({ error }, 'OAuth callback failed');
+      logger.error({ message: error instanceof Error ? error.message : String(error) }, 'OAuth callback failed');
       res.status(500).json({
         success: false,
         message: 'OAuth authentication failed',

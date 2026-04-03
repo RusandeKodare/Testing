@@ -1,16 +1,19 @@
 import { reportBackendHealth } from './utils/backendHealth.js';
 
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
+
 export class Dashboard {
   private username: string | null = null;
-  private userId: string | null = null;
+  private uploadFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   initialize(): void {
     void reportBackendHealth('backend-status-dashboard');
+    void this.initializeSession();
+  }
 
-    this.username = localStorage.getItem('username');
-    this.userId = localStorage.getItem('userId');
-
-    if (!this.username || !this.userId) {
+  private async initializeSession(): Promise<void> {
+    const loaded = await this.loadSessionUser();
+    if (!loaded) {
       this.redirectToLogin();
       return;
     }
@@ -19,14 +22,34 @@ export class Dashboard {
     this.setupEventListeners();
   }
 
+  private async loadSessionUser(): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const result = await response.json();
+      if (!result?.success || !result?.user?.id || !result?.user?.username) {
+        return false;
+      }
+
+      this.username = result.user.username;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private loadUserInfo(): void {
-    // Update username in all locations
     const usernameElements = document.querySelectorAll('#username, #username-detail, #username-hero, #username-nav');
     usernameElements.forEach(el => {
       if (el) el.textContent = this.username || 'User';
     });
 
-    // Update login time
     const loginTimeElement = document.getElementById('login-time');
     if (loginTimeElement) {
       loginTimeElement.textContent = new Date().toLocaleString();
@@ -34,22 +57,19 @@ export class Dashboard {
   }
 
   private setupEventListeners(): void {
-    // Handle logout from both buttons
     const logoutButtons = document.querySelectorAll('#logout-btn, .logout-btn-nav');
     logoutButtons.forEach(btn => {
       btn.addEventListener('click', () => this.logout());
     });
 
-    // Handle click on action buttons
     const actionButtons = document.querySelectorAll('.action-btn-large');
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => this.showNotImplemented());
     });
 
-    // Handle profile avatar change in hero section
     const changeAvatarBtn = document.getElementById('change-avatar-btn');
     const avatarInput = document.getElementById('avatar-input') as HTMLInputElement;
-    
+
     if (changeAvatarBtn) {
       changeAvatarBtn.addEventListener('click', () => {
         avatarInput?.click();
@@ -60,36 +80,33 @@ export class Dashboard {
       avatarInput.addEventListener('change', (e) => this.handleProfilePictureChange(e));
     }
 
-    // Load profile picture from database
-    this.loadProfilePicture();
+    this.setupProfileSettingsHandlers();
+    void this.loadProfilePicture();
+    void this.loadProfileSettings();
   }
 
   private async handleProfilePictureChange(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
-    
+
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file');
+      this.showProfileUploadFeedback('Please select a valid image file', false);
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+      this.showProfileUploadFeedback('File size must be less than 5MB', false);
       return;
     }
 
-    // Convert to data URL
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      
-      // Upload to backend
+
       try {
-        const response = await fetch('http://localhost:3000/api/profile/picture', {
+        const response = await fetch(`${API_BASE_URL}/api/profile/picture`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -103,26 +120,187 @@ export class Dashboard {
         const result = await response.json();
 
         if (result.success) {
-          // Update all avatar images immediately
           const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
           avatarImages.forEach(img => {
-            img.src = dataUrl;
+            img.src = result.profilePicture || dataUrl;
           });
-          alert('Profile picture updated successfully!');
+          this.showProfileUploadFeedback('Profile picture updated', true);
         } else {
-          alert('Failed to update profile picture: ' + result.message);
+          this.showProfileUploadFeedback(result.message || 'Failed to update profile picture', false);
         }
-      } catch (error) {
-        console.error('Error uploading profile picture:', error);
-        alert('Failed to upload profile picture. Please try again.');
+      } catch {
+        console.error('Failed to upload profile picture.');
+        this.showProfileUploadFeedback('Failed to upload profile picture. Please try again.', false);
       }
     };
     reader.readAsDataURL(file);
   }
 
+  private setupProfileSettingsHandlers(): void {
+    const emailForm = document.getElementById('email-settings-form') as HTMLFormElement | null;
+    const passwordForm = document.getElementById('password-settings-form') as HTMLFormElement | null;
+
+    if (emailForm) {
+      emailForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const emailInput = document.getElementById('settings-email-input') as HTMLInputElement | null;
+        const email = emailInput?.value.trim() || '';
+
+        if (!email) {
+          this.showSettingsMessage('email-settings-message', 'Email is required', false);
+          return;
+        }
+
+        const submitButton = emailForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+        if (submitButton) {
+          submitButton.disabled = true;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/profile/settings/email`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email }),
+            credentials: 'include'
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            this.showSettingsMessage('email-settings-message', 'Email saved successfully', true);
+          } else {
+            this.showSettingsMessage('email-settings-message', result.message || 'Failed to save email', false);
+          }
+        } catch {
+          console.error('Failed to update email.');
+          this.showSettingsMessage('email-settings-message', 'Failed to save email. Please try again.', false);
+        } finally {
+          if (submitButton) {
+            submitButton.disabled = false;
+          }
+        }
+      });
+    }
+
+    if (passwordForm) {
+      passwordForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const currentPassword = (document.getElementById('settings-current-password') as HTMLInputElement | null)?.value || '';
+        const newPassword = (document.getElementById('settings-new-password') as HTMLInputElement | null)?.value || '';
+        const confirmPassword = (document.getElementById('settings-confirm-password') as HTMLInputElement | null)?.value || '';
+
+        if (!newPassword || !confirmPassword) {
+          this.showSettingsMessage('password-settings-message', 'New password and confirmation are required', false);
+          return;
+        }
+
+        const submitButton = passwordForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+        if (submitButton) {
+          submitButton.disabled = true;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/profile/settings/password`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              currentPassword,
+              newPassword,
+              confirmPassword
+            }),
+            credentials: 'include'
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            this.showSettingsMessage('password-settings-message', 'Password updated successfully', true);
+            passwordForm.reset();
+          } else {
+            this.showSettingsMessage('password-settings-message', result.message || 'Failed to update password', false);
+          }
+        } catch {
+          console.error('Failed to update password.');
+          this.showSettingsMessage('password-settings-message', 'Failed to update password. Please try again.', false);
+        } finally {
+          if (submitButton) {
+            submitButton.disabled = false;
+          }
+        }
+      });
+    }
+  }
+
+  private async loadProfileSettings(): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile/settings`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const result = await response.json();
+      if (!result.success || !result.settings) {
+        return;
+      }
+
+      const emailInput = document.getElementById('settings-email-input') as HTMLInputElement | null;
+      const currentPasswordInput = document.getElementById('settings-current-password') as HTMLInputElement | null;
+
+      if (emailInput) {
+        emailInput.value = result.settings.email || '';
+      }
+
+      if (currentPasswordInput && !result.settings.hasPassword) {
+        currentPasswordInput.placeholder = 'Not required for OAuth-only accounts';
+      }
+    } catch {
+      console.error('Failed to load profile settings.');
+    }
+  }
+
+  private showSettingsMessage(elementId: string, message: string, isSuccess: boolean): void {
+    const messageElement = document.getElementById(elementId);
+    if (!messageElement) {
+      return;
+    }
+
+    messageElement.textContent = message;
+    messageElement.className = `settings-message ${isSuccess ? 'success' : 'error'} show`;
+  }
+
+  private showProfileUploadFeedback(message: string, isSuccess: boolean): void {
+    const feedback = document.getElementById('profile-upload-feedback');
+    if (!feedback) {
+      return;
+    }
+
+    if (this.uploadFeedbackTimer) {
+      clearTimeout(this.uploadFeedbackTimer);
+      this.uploadFeedbackTimer = null;
+    }
+
+    feedback.textContent = message;
+    feedback.style.color = isSuccess ? '#2ee58f' : '#ff8a9a';
+    feedback.classList.add('show');
+
+    this.uploadFeedbackTimer = setTimeout(() => {
+      feedback.classList.remove('show');
+      this.uploadFeedbackTimer = null;
+    }, 2200);
+  }
+
   private async loadProfilePicture(): Promise<void> {
     try {
-      const response = await fetch('http://localhost:3000/api/profile/picture/me', {
+      const response = await fetch(`${API_BASE_URL}/api/profile/picture/me`, {
         credentials: 'include',
       });
       const result = await response.json();
@@ -133,9 +311,8 @@ export class Dashboard {
           img.src = result.profilePicture;
         });
       }
-    } catch (error) {
-      console.error('Error loading profile picture:', error);
-      // Silently fail - user may not have a profile picture yet
+    } catch {
+      console.error('Failed to load profile picture.');
     }
   }
 
@@ -145,16 +322,14 @@ export class Dashboard {
 
   private async logout(): Promise<void> {
     try {
-      await fetch('http://localhost:3000/api/auth/logout', {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
     } catch {
-      // Continue local cleanup even if backend logout request fails.
+      // Continue redirect flow if logout request fails.
     }
 
-    localStorage.removeItem('username');
-    localStorage.removeItem('userId');
     this.redirectToLogin();
   }
 

@@ -61,15 +61,10 @@ export class LoginForm {
         if (result.success) {
           this.showMessage('login-message', 'Login successful! Redirecting...', 'success');
           form.reset();
-          
-          if (result.user) {
-            localStorage.setItem('username', result.user.username);
-            localStorage.setItem('userId', result.user.id?.toString() || '');
-            
-            setTimeout(() => {
-              window.location.href = '/dashboard.html';
-            }, 1000);
-          }
+
+          setTimeout(() => {
+            window.location.href = '/dashboard.html';
+          }, 1000);
         } else {
           this.showMessage('login-message', result.message, 'error');
         }
@@ -126,11 +121,6 @@ export class LoginForm {
         if (result.success) {
           this.showMessage('register-message', 'Registration successful! Please login.', 'success');
           form.reset();
-          
-          if (result.user) {
-            localStorage.setItem('username', result.user.username);
-            localStorage.setItem('userId', result.user.id?.toString() || '');
-          }
           
           setTimeout(() => {
             const loginTab = document.querySelector('[data-tab="login"]') as HTMLElement;

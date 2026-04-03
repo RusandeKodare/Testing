@@ -12,10 +12,11 @@ export interface AuthResult {
 }
 
 export class AuthService {
-  private readonly saltRounds = 10;
+  private readonly saltRounds: number;
   private readonly jwtSecret: string;
   private readonly maxLoginAttempts = 5;
   private readonly lockoutDurationMinutes = 30;
+  private readonly dummyHashForTiming = '$2a$10$4f.vjHzY5vJr9A0Qv8qAjOw8AxvP07xltN4D4wP4Vqp4R8h1hMnjS';
 
   constructor(
     private userRepository: UserRepository,
@@ -25,6 +26,8 @@ export class AuthService {
     if (!jwtSecret) {
       throw new Error('JWT secret is required');
     }
+    const configuredRounds = Number(process.env.BCRYPT_SALT_ROUNDS || '10');
+    this.saltRounds = Number.isFinite(configuredRounds) && configuredRounds >= 10 ? Math.floor(configuredRounds) : 10;
     this.jwtSecret = jwtSecret;
   }
 
@@ -82,7 +85,7 @@ export class AuthService {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : '';
       this.logger?.error(
-        { error: errorMessage, stack: errorStack, username: credentials.username },
+        { error: errorMessage, stack: process.env.NODE_ENV === 'production' ? undefined : errorStack, username: credentials.username },
         'Registration process failed with unexpected error'
       );
       return {
@@ -99,6 +102,7 @@ export class AuthService {
       const user = this.userRepository.findByUsername(credentials.username);
 
       if (!user) {
+        await bcrypt.compare(credentials.password, this.dummyHashForTiming);
         this.logger?.warn(
           { username: credentials.username },
           'Login attempt with non-existent username'
@@ -119,7 +123,7 @@ export class AuthService {
         );
         return {
           success: false,
-          message: 'Account is temporarily locked. Please try again later.'
+          message: 'Invalid credentials'
         };
       }
 
@@ -151,7 +155,7 @@ export class AuthService {
           );
           return {
             success: false,
-            message: 'Too many failed login attempts. Account locked for 30 minutes.'
+            message: 'Invalid credentials'
           };
         }
 
@@ -185,7 +189,7 @@ export class AuthService {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : '';
       this.logger?.error(
-        { error: errorMessage, stack: errorStack, username: credentials.username },
+        { error: errorMessage, stack: process.env.NODE_ENV === 'production' ? undefined : errorStack, username: credentials.username },
         'Login process failed with unexpected error'
       );
       return {

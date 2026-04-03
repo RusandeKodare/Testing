@@ -3,8 +3,8 @@ import { LoginForm } from './components/LoginForm.js';
 import { reportBackendHealth } from './utils/backendHealth.js';
 
 // Global error handler for unimplemented features
-window.addEventListener('error', (event) => {
-  console.error('Error:', event.error);
+window.addEventListener('error', () => {
+  console.error('An unexpected client error occurred.');
   showNotImplementedPopup();
 });
 
@@ -27,15 +27,28 @@ function showNotImplementedPopup(): void {
       text-align: center;
       font-family: Arial, sans-serif;
     `;
-    
-    popup.innerHTML = `
-      <h2 style="margin: 0 0 15px 0; color: #333;">Not Yet Implemented</h2>
-      <p style="margin: 0 0 20px 0; color: #666;">This feature is not yet available.</p>
-      <button onclick="const p = document.getElementById('not-implemented-popup'); if (p) p.remove();" 
-              style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-        Close
-      </button>
-    `;
+
+    const title = document.createElement('h2');
+    title.style.cssText = 'margin: 0 0 15px 0; color: #333;';
+    title.textContent = 'Not Yet Implemented';
+
+    const message = document.createElement('p');
+    message.style.cssText = 'margin: 0 0 20px 0; color: #666;';
+    message.textContent = 'This feature is not yet available.';
+
+    const closeButton = document.createElement('button');
+    closeButton.style.cssText = 'padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;';
+    closeButton.textContent = 'Close';
+    closeButton.addEventListener('click', () => {
+      const p = document.getElementById('not-implemented-popup');
+      if (p) p.remove();
+      const o = document.getElementById('popup-overlay');
+      if (o) o.remove();
+    });
+
+    popup.appendChild(title);
+    popup.appendChild(message);
+    popup.appendChild(closeButton);
     
     // Add overlay
     const overlay = document.createElement('div');
@@ -69,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = new LoginForm(authService);
     loginForm.initialize();
   } catch (error) {
-    console.error('Error initializing LoginForm:', error);
+    console.error('Failed to initialize login form.');
     showNotImplementedPopup();
   }
 });

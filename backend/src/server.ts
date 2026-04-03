@@ -35,11 +35,14 @@ if (!JWT_SECRET || JWT_SECRET === 'please-change-this-to-a-random-256-bit-key-in
 }
 
 app.use(helmet({
+  frameguard: {
+    action: 'deny'
+  },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
     },
   },
@@ -49,6 +52,10 @@ app.use(helmet({
     preload: true
   }
 }));
+
+if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
+  throw new Error('ALLOWED_ORIGINS must be explicitly configured in production');
+}
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3001'];
 app.use(cors({
@@ -66,6 +73,22 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: 'Too many authentication attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const profileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many profile requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const oauthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many OAuth requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -102,14 +125,14 @@ async function startServer() {
       googleClientSecret,
       googleRedirectUri
     );
-    app.use('/api/oauth', createOAuthRoutes(oauthService, JWT_SECRET));
+    app.use('/api/oauth', oauthLimiter, createOAuthRoutes(oauthService, JWT_SECRET));
     logger.info('OAuth service initialized');
   } else {
     logger.warn('Google OAuth credentials not configured - OAuth login disabled');
   }
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
-  app.use('/api/profile', createProfileRoutes(userRepository, JWT_SECRET));
+  app.use('/api/profile', profileLimiter, createProfileRoutes(userRepository, JWT_SECRET));
   app.use('/api/health', createHealthRoutes());
   
   app.use(errorHandler);

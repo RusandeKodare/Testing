@@ -60,7 +60,7 @@ export class UserRepository {
 
   findById(id: number): User | null {
     const result = this.db.exec(
-      'SELECT id, username, password_hash, profile_picture, created_at, login_attempts, locked_until FROM users WHERE id = ?',
+      'SELECT id, username, password_hash, profile_picture, email, created_at, login_attempts, locked_until FROM users WHERE id = ?',
       [id]
     );
 
@@ -74,9 +74,10 @@ export class UserRepository {
       username: row[1] as string,
       passwordHash: row[2] as string,
       profilePicture: row[3] as string | null,
-      createdAt: new Date(row[4] as string),
-      loginAttempts: row[5] as number,
-      lockedUntil: row[6] ? new Date(row[6] as string) : null
+      email: row[4] as string | null,
+      createdAt: new Date(row[5] as string),
+      loginAttempts: row[6] as number,
+      lockedUntil: row[7] ? new Date(row[7] as string) : null
     };
   }
 
@@ -151,6 +152,47 @@ export class UserRepository {
     stmt.run([profilePictureData, userId]);
     stmt.free();
     this.dbConfig?.persistChanges();
+  }
+
+  updateEmail(userId: number, email: string): void {
+    const stmt = this.db.prepare(
+      'UPDATE users SET email = ? WHERE id = ?'
+    );
+    stmt.run([email, userId]);
+    stmt.free();
+    this.dbConfig?.persistChanges();
+  }
+
+  updatePasswordHash(userId: number, passwordHash: string): void {
+    const stmt = this.db.prepare(
+      'UPDATE users SET password_hash = ? WHERE id = ?'
+    );
+    stmt.run([passwordHash, userId]);
+    stmt.free();
+    this.dbConfig?.persistChanges();
+  }
+
+  emailExists(email: string, excludeUserId?: number): boolean {
+    let result;
+
+    if (typeof excludeUserId === 'number') {
+      result = this.db.exec(
+        'SELECT COUNT(*) FROM users WHERE email = ? AND id != ?',
+        [email, excludeUserId]
+      );
+    } else {
+      result = this.db.exec(
+        'SELECT COUNT(*) FROM users WHERE email = ?',
+        [email]
+      );
+    }
+
+    if (result.length === 0 || !result[0].values[0]) {
+      return false;
+    }
+
+    const count = result[0].values[0][0];
+    return typeof count === 'number' && count > 0;
   }
 
   getProfilePicture(userId: number): string | null {

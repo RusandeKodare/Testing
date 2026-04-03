@@ -328,7 +328,7 @@ describe('AuthService', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('locked');
+      expect(result.message).toBe('Invalid credentials');
       expect(mockUserRepository.incrementLoginAttempts).not.toHaveBeenCalled();
     });
 

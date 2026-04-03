@@ -1,6 +1,6 @@
 # TestProject - Auth, OAuth, and Profile Persistence
 
-Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard flows, Google OAuth support, and persistent profile pictures stored in the database.
+Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard flows, Google OAuth support, persistent profile pictures, and profile settings (email + password updates).
 
 ## Security Status
 
@@ -20,6 +20,7 @@ Current snapshot (April 3, 2026):
 - httpOnly auth cookie support
 - Account lockout after repeated failed logins
 - Profile picture persistence in database (not browser-only)
+- Profile settings menu for updating account email and password
 - Structured security logging with redaction
 - Unit tests and coverage gates in backend and frontend
 
@@ -130,9 +131,9 @@ npm test
 ```
 
 Current counts:
-- Backend: 76 tests
-- Frontend: 27 tests
-- Total: 103 tests
+- Backend: 107 tests
+- Frontend: 33 tests
+- Total: 140 tests
 
 ## API Overview
 
@@ -148,6 +149,11 @@ OAuth:
 Profile picture:
 - `POST /api/profile/picture` (authenticated)
 - `GET /api/profile/picture/me` (authenticated)
+
+Profile settings:
+- `GET /api/profile/settings` (authenticated)
+- `PUT /api/profile/settings/email` (authenticated)
+- `POST /api/profile/settings/password` (authenticated)
 
 ## Git Hooks
 
@@ -171,6 +177,20 @@ Pre-commit checks:
 6. Run frontend tests
 7. Audit backend dependencies (`npm audit --audit-level=high`)
 8. Audit frontend dependencies (`npm audit --audit-level=high`)
+
+Automated CI security checks in GitHub Actions:
+1. CodeQL static analysis (JavaScript/TypeScript)
+2. Semgrep OWASP SAST rules
+3. Gitleaks secret scanning (full git history)
+4. npm dependency audits (backend/frontend)
+5. OWASP ZAP baseline DAST scan against the running app (passive baseline coverage)
+6. Dependabot weekly dependency update PRs
+
+CI safety guardrails:
+1. Workflows use `pull_request` (not `pull_request_target`) for untrusted PR safety.
+2. Workflows use least-privilege permissions and `persist-credentials: false`.
+3. ZAP target is local CI app URL (`http://localhost:3001`), not production.
+4. Dependabot creates PRs only; merges remain manual review.
 
 Bypass (only when absolutely necessary):
 ```bash
@@ -199,6 +219,8 @@ For Google OAuth:
 Detailed and current risk tracking is in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 
 OAuth implementation status and remaining hardening work are tracked in [OAuth_Status_and_Roadmap.md](OAuth_Status_and_Roadmap.md).
+
+Automated security scanning workflow: [.github/workflows/security.yml](.github/workflows/security.yml).
 
 ## License
 

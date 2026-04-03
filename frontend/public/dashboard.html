@@ -30,6 +30,7 @@
             <div class="profile-section-hero">
                 <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
                 <button id="change-avatar-btn" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
+                <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
             </div>
             <h1>Welcome, <span id="username-hero">User</span>! 👋</h1>
             <p>You're now securely authenticated and ready to explore your dashboard</p>
@@ -39,6 +40,40 @@
                 <div class="stat"><span>⚡</span> Active Session</div>
             </div>
             <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+        </div>
+    </section>
+
+    <section class="section-container">
+        <h2>Profile Settings</h2>
+        <div class="settings-grid">
+            <div class="settings-card">
+                <h3>Contact Email</h3>
+                <p class="settings-description">Add or update your email address for account notifications.</p>
+                <form id="email-settings-form" class="settings-form">
+                    <label for="settings-email-input">Email Address</label>
+                    <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
+                    <button type="submit" class="settings-btn">Save Email</button>
+                    <div id="email-settings-message" class="settings-message" role="status" aria-live="polite"></div>
+                </form>
+            </div>
+
+            <div class="settings-card">
+                <h3>Change Password</h3>
+                <p class="settings-description">Update your password using a strong combination of characters.</p>
+                <form id="password-settings-form" class="settings-form">
+                    <label for="settings-current-password">Current Password</label>
+                    <input id="settings-current-password" type="password" autocomplete="current-password" placeholder="Current password">
+
+                    <label for="settings-new-password">New Password</label>
+                    <input id="settings-new-password" type="password" autocomplete="new-password" placeholder="New secure password" required>
+
+                    <label for="settings-confirm-password">Confirm New Password</label>
+                    <input id="settings-confirm-password" type="password" autocomplete="new-password" placeholder="Repeat new password" required>
+
+                    <button type="submit" class="settings-btn">Update Password</button>
+                    <div id="password-settings-message" class="settings-message" role="status" aria-live="polite"></div>
+                </form>
+            </div>
         </div>
     </section>
 
