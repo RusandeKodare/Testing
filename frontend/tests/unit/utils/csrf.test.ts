@@ -50,4 +50,22 @@ describe('csrf utils', () => {
     await expect(initializeCsrfToken()).rejects.toThrow('CSRF initialization failed with status 429');
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
+
+  it('retries on network error and succeeds on second attempt', async () => {
+    (global.fetch as jest.Mock)
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+
+    await expect(initializeCsrfToken()).resolves.toBeUndefined();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws consistent network error when both attempts fail by exception', async () => {
+    (global.fetch as jest.Mock)
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockRejectedValueOnce(new Error('connection reset'));
+
+    await expect(initializeCsrfToken()).rejects.toThrow('CSRF initialization failed due to network error');
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
 });

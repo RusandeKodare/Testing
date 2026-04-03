@@ -31,6 +31,21 @@ describe('DiaryApiService', () => {
     );
   });
 
+  it('lists diary entries without query params when none are provided', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: async () => ({ success: true, entries: [] })
+    });
+
+    await service.listEntries();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/diary/entries',
+      {
+        credentials: 'include'
+      }
+    );
+  });
+
   it('creates diary entry with csrf header', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       json: async () => ({ success: true, entry: { id: 1 } })
