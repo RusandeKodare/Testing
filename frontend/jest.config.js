@@ -7,6 +7,9 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts'
   ],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
   coverageThreshold: {
     global: {
       branches: 65,

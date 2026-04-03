@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { createProfileRoutes } from '../../../src/routes/profileRoutes';
+import { EmailNotificationService } from '../../../src/services/EmailNotificationService';
 
 jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
@@ -191,13 +192,21 @@ describe('profileRoutes', () => {
   it('updates email for valid request', async () => {
     const repo = mockRepo();
     repo.emailExists.mockReturnValue(false);
-    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const emailNotificationService: EmailNotificationService = {
+      sendEmailChangeNotification: jest.fn().mockResolvedValue(undefined)
+    };
+
+    const router = createProfileRoutes(repo as unknown as any, 'secret', emailNotificationService);
     const handler = getRouteHandler(router, '/settings/email', 'put');
     const { res, status, json } = createRes();
 
     await handler({ user: { userId: 7 }, body: { email: 'new@example.com' } }, res);
 
     expect(repo.updateEmail).toHaveBeenCalledWith(7, 'new@example.com');
+    expect(emailNotificationService.sendEmailChangeNotification).toHaveBeenCalledWith({
+      userId: 7,
+      newEmail: 'new@example.com'
+    });
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       success: true,

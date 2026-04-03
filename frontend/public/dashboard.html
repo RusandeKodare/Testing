@@ -50,9 +50,20 @@
                 <h3>Contact Email</h3>
                 <p class="settings-description">Add or update your email address for account notifications.</p>
                 <form id="email-settings-form" class="settings-form">
-                    <label for="settings-email-input">Email Address</label>
-                    <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
-                    <button type="submit" class="settings-btn">Save Email</button>
+                    <div class="email-current-row">
+                        <p class="email-current-text">Current email: <span id="current-email-value">Not set</span></p>
+                        <button type="button" id="edit-email-btn" class="settings-btn settings-btn-secondary">Edit</button>
+                    </div>
+
+                    <div id="email-edit-container" class="email-edit-container is-hidden">
+                        <label for="settings-email-input">New Email Address</label>
+                        <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
+                        <div class="email-edit-actions">
+                            <button id="save-email-btn" type="submit" class="settings-btn">Save Email</button>
+                            <button id="cancel-email-btn" type="button" class="settings-btn settings-btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+
                     <div id="email-settings-message" class="settings-message" role="status" aria-live="polite"></div>
                 </form>
             </div>

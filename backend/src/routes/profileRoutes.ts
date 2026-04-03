@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/UserRepository';
 import { getLogger } from '../utils/logger';
 import { AuthenticatedRequest, createAuthMiddleware } from '../middleware/authMiddleware';
+import { createEmailNotificationServiceFromEnv, EmailNotificationService } from '../services/EmailNotificationService';
 
 const logger = getLogger('profile');
 
@@ -105,7 +106,11 @@ function validateAndNormalizeProfileImage(profilePicture: string): { ok: true; n
   };
 }
 
-export function createProfileRoutes(userRepository: UserRepository, jwtSecret: string): Router {
+export function createProfileRoutes(
+  userRepository: UserRepository,
+  jwtSecret: string,
+  emailNotificationService: EmailNotificationService = createEmailNotificationServiceFromEnv()
+): Router {
   const router = Router();
   const authenticate = createAuthMiddleware(jwtSecret);
 
@@ -197,6 +202,13 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
       userRepository.updateEmail(userId, email);
 
       logger.info({ userId }, 'Profile email updated');
+
+      void emailNotificationService.sendEmailChangeNotification({ userId, newEmail: email }).catch((error) => {
+        logger.error(
+          { userId, message: error instanceof Error ? error.message : String(error) },
+          'Failed to send email update notification'
+        );
+      });
 
       res.status(200).json({
         success: true,

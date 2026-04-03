@@ -6,6 +6,34 @@ export class Dashboard {
   private username: string | null = null;
   private uploadFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private setEmailEditing(isEditing: boolean): void {
+    const editContainer = document.getElementById('email-edit-container');
+    const editButton = document.getElementById('edit-email-btn');
+
+    if (!editContainer || !editButton) {
+      return;
+    }
+
+    editContainer.classList.toggle('is-hidden', !isEditing);
+    editButton.classList.toggle('is-hidden', isEditing);
+  }
+
+  private setCurrentEmail(email: string): void {
+    const currentEmailValue = document.getElementById('current-email-value');
+    const normalized = email.trim();
+    const safeEmail = normalized || 'Not set';
+
+    if (currentEmailValue) {
+      currentEmailValue.textContent = safeEmail;
+      currentEmailValue.setAttribute('data-email', normalized);
+    }
+  }
+
+  private getStoredCurrentEmail(): string {
+    const currentEmailValue = document.getElementById('current-email-value');
+    return currentEmailValue?.getAttribute('data-email') || '';
+  }
+
   initialize(): void {
     void reportBackendHealth('backend-status-dashboard');
     void this.initializeSession();
@@ -139,6 +167,30 @@ export class Dashboard {
   private setupProfileSettingsHandlers(): void {
     const emailForm = document.getElementById('email-settings-form') as HTMLFormElement | null;
     const passwordForm = document.getElementById('password-settings-form') as HTMLFormElement | null;
+    const editEmailButton = document.getElementById('edit-email-btn') as HTMLButtonElement | null;
+    const cancelEmailButton = document.getElementById('cancel-email-btn') as HTMLButtonElement | null;
+
+    if (editEmailButton) {
+      editEmailButton.addEventListener('click', () => {
+        const emailInput = document.getElementById('settings-email-input') as HTMLInputElement | null;
+        if (emailInput) {
+          emailInput.value = this.getStoredCurrentEmail();
+          emailInput.focus();
+        }
+        this.setEmailEditing(true);
+      });
+    }
+
+    if (cancelEmailButton) {
+      cancelEmailButton.addEventListener('click', () => {
+        const emailInput = document.getElementById('settings-email-input') as HTMLInputElement | null;
+        if (emailInput) {
+          emailInput.value = this.getStoredCurrentEmail();
+        }
+        this.showSettingsMessage('email-settings-message', '', true);
+        this.setEmailEditing(false);
+      });
+    }
 
     if (emailForm) {
       emailForm.addEventListener('submit', async (event) => {
@@ -170,7 +222,10 @@ export class Dashboard {
           const result = await response.json();
 
           if (response.ok && result.success) {
-            this.showSettingsMessage('email-settings-message', 'Email saved successfully', true);
+            const savedEmail = typeof result.email === 'string' ? result.email : email;
+            this.setCurrentEmail(savedEmail);
+            this.setEmailEditing(false);
+            this.showSettingsMessage('email-settings-message', `Current email: ${savedEmail}`, true);
           } else {
             this.showSettingsMessage('email-settings-message', result.message || 'Failed to save email', false);
           }
@@ -258,6 +313,9 @@ export class Dashboard {
       if (emailInput) {
         emailInput.value = result.settings.email || '';
       }
+
+      this.setCurrentEmail(result.settings.email || '');
+      this.setEmailEditing(false);
 
       if (currentPasswordInput && !result.settings.hasPassword) {
         currentPasswordInput.placeholder = 'Not required for OAuth-only accounts';
