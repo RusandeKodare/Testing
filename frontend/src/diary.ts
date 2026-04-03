@@ -1,6 +1,7 @@
 import { reportBackendHealth } from './utils/backendHealth.js';
 import { initializeCsrfToken } from './utils/csrf.js';
 import { DiaryApiService } from './services/DiaryApiService.js';
+import { setupProfileMenuBehavior } from './utils/profileMenu.js';
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
@@ -115,33 +116,7 @@ class DiaryPage {
   }
 
   private setupProfileMenuBehavior(): void {
-    const menus = Array.from(document.querySelectorAll<HTMLDetailsElement>('.profile-menu'));
-    if (!menus.length) {
-      return;
-    }
-
-    const closeOpenMenus = (): void => {
-      menus.forEach((menu) => {
-        if (menu.open) {
-          menu.removeAttribute('open');
-        }
-      });
-    };
-
-    document.addEventListener('click', (event) => {
-      const target = event.target as Node | null;
-      menus.forEach((menu) => {
-        if (menu.open && target && !menu.contains(target)) {
-          menu.removeAttribute('open');
-        }
-      });
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeOpenMenus();
-      }
-    });
+    setupProfileMenuBehavior('.profile-menu');
   }
 
   private buildPayload(): Record<string, unknown> {
