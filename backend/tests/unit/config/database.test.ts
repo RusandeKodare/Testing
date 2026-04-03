@@ -44,6 +44,16 @@ describe('DatabaseConfig', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
+    it('should create diary_entries table on initialization', async () => {
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+
+      const db = dbConfig.getDatabase();
+      const result = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='diary_entries'");
+
+      expect(result.length).toBeGreaterThan(0);
+    });
+
     it('should migrate legacy users table schema for existing databases', async () => {
       const SQL = await initSqlJs();
       const legacyDb = new SQL.Database();
@@ -72,6 +82,16 @@ describe('DatabaseConfig', () => {
       expect(columns).toContain('oauth_id');
       expect(columns).toContain('login_attempts');
       expect(columns).toContain('locked_until');
+
+      const diaryColumnsResult = db.exec('PRAGMA table_info(diary_entries)');
+      const diaryColumns = diaryColumnsResult[0].values.map((row) => String(row[1]));
+      expect(diaryColumns).toContain('title');
+      expect(diaryColumns).toContain('content');
+      expect(diaryColumns).toContain('mood');
+      expect(diaryColumns).toContain('tags_json');
+      expect(diaryColumns).toContain('is_favorite');
+      expect(diaryColumns).toContain('entry_date');
+      expect(diaryColumns).toContain('updated_at');
 
       const indexResult = db.exec("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_oauth_user'");
       expect(indexResult.length).toBeGreaterThan(0);
