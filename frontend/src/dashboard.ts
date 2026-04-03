@@ -115,8 +115,34 @@ export class Dashboard {
     }
 
     this.setupProfileSettingsHandlers();
+    this.setupSettingsTabs();
     void this.loadProfilePicture();
     void this.loadProfileSettings();
+  }
+
+  private setupSettingsTabs(): void {
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.settings-tab-btn');
+    const panels = document.querySelectorAll<HTMLElement>('.settings-panel');
+
+    if (!tabs.length || !panels.length) {
+      return;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-settings-tab');
+        if (!target) {
+          return;
+        }
+
+        tabs.forEach((entry) => entry.classList.remove('active'));
+        panels.forEach((panel) => panel.classList.remove('active'));
+
+        tab.classList.add('active');
+        const panel = document.getElementById(`settings-panel-${target}`);
+        panel?.classList.add('active');
+      });
+    });
   }
 
   private async handleProfilePictureChange(e: Event): Promise<void> {

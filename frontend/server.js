@@ -8,8 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const indexFilePath = path.join(__dirname, 'public', 'index.html');
 const dashboardFilePath = path.join(__dirname, 'public', 'dashboard.html');
+const settingsFilePath = path.join(__dirname, 'public', 'settings.html');
 const indexTemplate = fs.readFileSync(indexFilePath, 'utf8');
 const dashboardTemplate = fs.readFileSync(dashboardFilePath, 'utf8');
+const settingsTemplate = fs.readFileSync(settingsFilePath, 'utf8');
 
 function createCsrfFormToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -86,6 +88,14 @@ app.get('/dashboard.html', (req, res) => {
   res.setHeader('Expires', '0');
   const csrfToken = createCsrfFormToken();
   res.type('html').send(renderHtmlWithCsrf(dashboardTemplate, csrfToken));
+});
+
+app.get('/settings.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  const csrfToken = createCsrfFormToken();
+  res.type('html').send(renderHtmlWithCsrf(settingsTemplate, csrfToken));
 });
 
 app.use(express.static(path.join(__dirname, 'public'), {
