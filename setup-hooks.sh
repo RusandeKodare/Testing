@@ -118,8 +118,58 @@ EOF
 # Make the hook executable
 chmod +x .git/hooks/pre-commit
 
+# Create the pre-push hook
+cat > .git/hooks/pre-push << 'EOF'
+#!/bin/sh
+# Pre-push hook to validate test suites before push
+
+echo "Running pre-push checks..."
+echo "========================"
+
+# Run backend tests
+echo ""
+echo "Running backend tests..."
+cd backend || exit 1
+npm test --silent
+BACKEND_TEST_EXIT_CODE=$?
+
+if [ $BACKEND_TEST_EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "[ERROR] Backend tests failed!"
+  echo "Push aborted. Please fix failing tests before pushing."
+  exit 1
+fi
+
+echo "[OK] Backend tests passed"
+
+# Run frontend tests
+echo ""
+echo "Running frontend tests..."
+cd ../frontend || exit 1
+npm test --silent
+FRONTEND_TEST_EXIT_CODE=$?
+
+if [ $FRONTEND_TEST_EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "[ERROR] Frontend tests failed!"
+  echo "Push aborted. Please fix failing tests before pushing."
+  exit 1
+fi
+
+echo "[OK] Frontend tests passed"
+echo ""
+echo "========================"
+echo "[OK] All pre-push checks passed. Proceeding with push..."
+echo ""
+
+exit 0
+EOF
+
+# Make the hook executable
+chmod +x .git/hooks/pre-push
+
 echo "[OK] Git hooks installed successfully!"
 echo ""
 echo "The pre-commit hook will now build, type-check, and audit backend + frontend before each commit."
-echo "Tests run in CI workflows instead of at commit-time."
+echo "The pre-push hook will now run backend + frontend tests before each push."
 echo "To bypass the hook temporarily, use: git commit --no-verify"

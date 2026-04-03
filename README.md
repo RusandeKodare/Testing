@@ -182,7 +182,11 @@ Pre-commit checks:
 5. Audit backend dependencies (`npm audit --audit-level=high`)
 6. Audit frontend dependencies (`npm audit --audit-level=high`)
 
-Tests run in CI workflows instead of at commit-time.
+Pre-push checks:
+1. Run backend tests (`npm test`)
+2. Run frontend tests (`npm test`)
+
+Tests run at pre-push and in CI workflows.
 
 Automated CI security checks in GitHub Actions:
 1. CodeQL static analysis (JavaScript/TypeScript)

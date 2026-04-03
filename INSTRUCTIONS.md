@@ -148,7 +148,12 @@ The pre-commit hook runs all required checks automatically:
 5. Backend dependency audit (`npm audit --audit-level=high`)
 6. Frontend dependency audit (`npm audit --audit-level=high`)
 
-Tests run in CI workflows instead of at commit-time.
+The pre-push hook runs all required test checks automatically:
+
+1. Backend tests (`npm test`)
+2. Frontend tests (`npm test`)
+
+Tests run at pre-push and in CI workflows.
 
 Manual fallback (only if hooks are unavailable or for troubleshooting):
 
