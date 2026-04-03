@@ -96,6 +96,31 @@ describe('DatabaseConfig', () => {
       const indexResult = db.exec("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_oauth_user'");
       expect(indexResult.length).toBeGreaterThan(0);
     });
+
+    it('persists newly created diary table immediately for existing DB files', async () => {
+      const SQL = await initSqlJs();
+      const legacyDb = new SQL.Database();
+      legacyDb.run(`
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      fs.writeFileSync(testDbPath, legacyDb.export());
+      legacyDb.close();
+
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+
+      const persistedBuffer = fs.readFileSync(testDbPath);
+      const persistedDb = new SQL.Database(persistedBuffer);
+      const result = persistedDb.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='diary_entries'");
+      persistedDb.close();
+
+      expect(result.length).toBeGreaterThan(0);
+    });
   });
 
   describe('getDatabase', () => {

@@ -211,7 +211,11 @@ CI safety guardrails:
 
 Bypass (only when absolutely necessary):
 ```bash
+# Skip pre-commit hook
 git commit --no-verify
+
+# Skip pre-push hook
+git push --no-verify
 ```
 
 ## Environment Variables
