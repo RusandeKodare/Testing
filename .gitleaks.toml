@@ -5,6 +5,9 @@ useDefault = true
 
 [[allowlists]]
 description = "Allow JWT placeholder in .env.example"
+commits = [
+  '''f6db402629ab7ea351c5f2dfb289108b23878589''',
+]
 paths = [
   '''^\.env\.example$''',
 ]
