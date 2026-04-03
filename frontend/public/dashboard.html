@@ -11,7 +11,7 @@
     <div id="backend-status-dashboard" class="backend-status-banner" role="status" aria-live="polite"></div>
     <nav class="navbar">
         <div class="navbar-container">
-            <div class="navbar-logo">🔐 SecureAuth Dashboard</div>
+            <a class="navbar-logo" href="/dashboard.html" aria-label="Go to dashboard">🔐 SecureAuth</a>
             <div class="navbar-right">
                 <div class="profile-nav">
                     <img id="profile-avatar-nav" class="profile-avatar-nav" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
@@ -43,194 +43,60 @@
         </div>
     </section>
 
-    <!-- Session Info Section -->
-    <section class="section-bg">
-        <div class="section-container">
-            <h2>Session Information</h2>
-            <div class="info-grid">
-                <div class="info-card-grid">
-                    <div class="icon">👤</div>
-                    <h3>Username</h3>
-                    <p id="username-detail">-</p>
-                </div>
-                <div class="info-card-grid">
-                    <div class="icon">⏰</div>
-                    <h3>Login Time</h3>
-                    <p id="login-time">-</p>
-                </div>
-                <div class="info-card-grid">
-                    <div class="icon">🟢</div>
-                    <h3>Token Status</h3>
-                    <p id="token-status" class="status-active">Active</p>
-                </div>
-                <div class="info-card-grid">
-                    <div class="icon">🌍</div>
-                    <h3>Location</h3>
-                    <p>Global Access</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
     <section class="section-container">
-        <h2>Key Features</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔐</div>
-                <h3>Enterprise Security</h3>
-                <p>Military-grade encryption for all your data and communications</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Lightning Fast</h3>
-                <p>Optimized performance with sub-100ms response times</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Mobile Ready</h3>
-                <p>Fully responsive design works seamlessly on all devices</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔄</div>
-                <h3>Auto Sync</h3>
-                <p>Real-time synchronization across all your devices</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Analytics</h3>
-                <p>Comprehensive dashboards and detailed analytics reports</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🤝</div>
-                <h3>24/7 Support</h3>
-                <p>Dedicated support team ready to help you anytime</p>
+        <div class="dashboard-shell">
+            <aside class="dashboard-sidebar">
+                <h3>Your Profile</h3>
+                <div class="profile-section-hero dashboard-avatar-wrap">
+                    <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
+                    <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
+                    <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
+                </div>
+                <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
+                <p class="dashboard-sidebar-note">This profile image is shown in your account menu and settings.</p>
+                <a class="settings-btn" href="/settings.html">Manage Account Settings</a>
+            </aside>
+
+            <div>
+                <!-- Session Info Section -->
+                <section class="section-bg dashboard-main-block">
+                    <div class="section-container">
+                        <h2>Session Information</h2>
+                        <div class="info-grid">
+                            <div class="info-card-grid">
+                                <div class="icon">👤</div>
+                                <h3>Username</h3>
+                                <p id="username-detail">-</p>
+                            </div>
+                            <div class="info-card-grid">
+                                <div class="icon">⏰</div>
+                                <h3>Login Time</h3>
+                                <p id="login-time">-</p>
+                            </div>
+                            <div class="info-card-grid">
+                                <div class="icon">🟢</div>
+                                <h3>Token Status</h3>
+                                <p id="token-status" class="status-active">Active</p>
+                            </div>
+                            <div class="info-card-grid">
+                                <div class="icon">🌍</div>
+                                <h3>Location</h3>
+                                <p>Global Access</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </section>
 
-    <!-- Quick Actions Section -->
-    <section class="section-bg">
-        <div class="section-container">
-            <h2>Quick Actions</h2>
-            <div class="actions-grid">
-                <button class="action-btn-large">👤 View Profile</button>
-                <button class="action-btn-large">⚙️ Settings</button>
-                <button class="action-btn-large">📧 Messages</button>
-                <button class="action-btn-large">📚 Documentation</button>
-                <button class="action-btn-large">💬 Support</button>
-                <button class="action-btn-large">🎓 Tutorials</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
     <section class="section-container">
-        <h2>Your Statistics</h2>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">1,243</div>
-                <div class="stat-label">Total Sessions</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">47</div>
-                <div class="stat-label">Active Projects</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">98%</div>
-                <div class="stat-label">Uptime</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">2.3GB</div>
-                <div class="stat-label">Storage Used</div>
-            </div>
+        <div class="settings-card">
+            <h3>Account Shortcuts</h3>
+            <p class="settings-description">Need to update your account details? Use settings to manage profile picture, email, and password.</p>
+            <a class="settings-btn" href="/settings.html">Go to Settings</a>
         </div>
     </section>
-
-    <!-- Testimonials Section -->
-    <section class="section-bg">
-        <div class="section-container">
-            <h2>What Users Say</h2>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <p>"Best authentication system I've ever used. Highly secure and incredibly fast!"</p>
-                    <div class="testimonial-author">- Alex Johnson</div>
-                </div>
-                <div class="testimonial-card">
-                    <p>"Seamless integration with our existing systems. The support team was fantastic!"</p>
-                    <div class="testimonial-author">- Sarah Chen</div>
-                </div>
-                <div class="testimonial-card">
-                    <p>"Enterprise-grade security at a fraction of the cost. Couldn't ask for more."</p>
-                    <div class="testimonial-author">- Mike Rodriguez</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="section-container">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-grid">
-            <div class="faq-card">
-                <h3>❓ How secure is my data?</h3>
-                <p>Your data is protected with AES-256 encryption and stored in compliant data centers.</p>
-            </div>
-            <div class="faq-card">
-                <h3>🔄 Can I export my data?</h3>
-                <p>Yes! You can export all your data in multiple formats whenever you need it.</p>
-            </div>
-            <div class="faq-card">
-                <h3>📱 Is there an API?</h3>
-                <p>Absolutely! We provide a comprehensive REST API for developers.</p>
-            </div>
-            <div class="faq-card">
-                <h3>🌍 What regions are supported?</h3>
-                <p>We operate globally with servers in all major continents.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h4>Product</h4>
-                <ul>
-                    <li>Features</li>
-                    <li>Security</li>
-                    <li>Pricing</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Company</h4>
-                <ul>
-                    <li>About</li>
-                    <li>Blog</li>
-                    <li>Careers</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li>Privacy</li>
-                    <li>Terms</li>
-                    <li>Contact</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Connect</h4>
-                <ul>
-                    <li>Twitter</li>
-                    <li>LinkedIn</li>
-                    <li>GitHub</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 SecureAuth. All rights reserved.</p>
-        </div>
-    </footer>
 
     <script type="module" src="dist/dashboard.js"></script>
 </body>

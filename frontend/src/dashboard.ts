@@ -96,11 +96,6 @@ export class Dashboard {
       btn.addEventListener('click', () => this.logout());
     });
 
-    const actionButtons = document.querySelectorAll('.action-btn-large');
-    actionButtons.forEach(btn => {
-      btn.addEventListener('click', () => this.showNotImplemented());
-    });
-
     const changeAvatarBtn = document.getElementById('change-avatar-btn');
     const avatarInput = document.getElementById('avatar-input') as HTMLInputElement;
 
@@ -116,8 +111,37 @@ export class Dashboard {
 
     this.setupProfileSettingsHandlers();
     this.setupSettingsTabs();
+    this.setupProfileMenuBehavior();
     void this.loadProfilePicture();
     void this.loadProfileSettings();
+  }
+
+  private setupProfileMenuBehavior(): void {
+    const menus = Array.from(document.querySelectorAll<HTMLDetailsElement>('.profile-menu'));
+    if (!menus.length) {
+      return;
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target as Node | null;
+      menus.forEach((menu) => {
+        if (menu.open && target && !menu.contains(target)) {
+          menu.removeAttribute('open');
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      menus.forEach((menu) => {
+        if (menu.open) {
+          menu.removeAttribute('open');
+        }
+      });
+    });
   }
 
   private setupSettingsTabs(): void {
@@ -407,10 +431,6 @@ export class Dashboard {
     } catch {
       console.error('Failed to load profile picture.');
     }
-  }
-
-  private showNotImplemented(): void {
-    this.showProfileUploadFeedback('This feature is not implemented yet.', false);
   }
 
   private async logout(): Promise<void> {
