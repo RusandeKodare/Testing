@@ -33,7 +33,6 @@ export class OAuthService {
     ];
 
     return this.oauth2Client.generateAuthUrl({
-      access_type: 'offline',
       scope: scopes,
       state: state,
     });

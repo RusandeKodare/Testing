@@ -30,7 +30,7 @@ These are the next improvements to complete OAuth hardening and reliability:
 2. Handle username collisions when creating OAuth users (email local-part can clash).
 3. Enforce `email_verified` from Google before creating/signing in.
 4. Add explicit OAuth route tests for invalid or replayed state.
-5. Decide whether you truly need offline access; if not, remove offline request mode.
+5. Decide whether you truly need offline access; if not, remove offline request mode. (Completed: offline mode removed)
 
 ## Recommended OAuth Path
 
@@ -49,7 +49,7 @@ And add:
 ### Phase 1: Security Hardening (Immediate)
 1. PKCE support end-to-end.
 2. `email_verified` enforcement.
-3. Remove `offline` mode if refresh token persistence is not needed.
+3. Remove `offline` mode if refresh token persistence is not needed. (Completed)
 
 ### Phase 2: Reliability and Data Integrity
 1. Collision-safe username generation strategy.
@@ -101,10 +101,10 @@ Add tests for:
 ### 5) Offline Access Decision
 
 Current:
-1. OAuth auth URL requests offline access.
+1. OAuth auth URL no longer requests offline access.
 
 Decision:
-1. If no refresh token storage/usage is needed, disable offline access.
+1. Offline mode is disabled because refresh token persistence is not currently implemented.
 2. If needed later, re-enable with encrypted token storage and rotation policy.
 
 ## Success Criteria
