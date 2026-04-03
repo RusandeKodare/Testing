@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "jest --coverage",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "serve": "node server.js"
   },

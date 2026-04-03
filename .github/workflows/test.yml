@@ -50,6 +50,19 @@ jobs:
     - name: Run frontend tests
       working-directory: ./frontend
       run: npm test
+
+    - name: Run backend coverage (Node 20 only)
+      if: matrix.node-version == '20.x'
+      working-directory: ./backend
+      env:
+        JWT_SECRET: test-secret-key-for-ci-testing-only
+        NODE_ENV: test
+      run: npm run test:coverage
+
+    - name: Run frontend coverage (Node 20 only)
+      if: matrix.node-version == '20.x'
+      working-directory: ./frontend
+      run: npm run test:coverage
     
     - name: Run security audit - backend
       working-directory: ./backend
