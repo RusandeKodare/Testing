@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
     <title>Dashboard - Secure Login System</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="backend-status-dashboard" class="backend-status-banner" role="status" aria-live="polite"></div>
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-logo">🔐 SecureAuth Dashboard</div>
@@ -39,7 +37,7 @@
                 <div class="stat"><span>🔒</span> Fully Secured</div>
                 <div class="stat"><span>⚡</span> Active Session</div>
             </div>
-            <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+            <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
         </div>
     </section>
 
@@ -49,10 +47,22 @@
             <div class="settings-card">
                 <h3>Contact Email</h3>
                 <p class="settings-description">Add or update your email address for account notifications.</p>
-                <form id="email-settings-form" class="settings-form">
-                    <label for="settings-email-input">Email Address</label>
-                    <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
-                    <button type="submit" class="settings-btn">Save Email</button>
+                <form id="email-settings-form" class="settings-form" method="post" action="#">
+                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
+                    <div class="email-current-row">
+                        <p class="email-current-text">Current email: <span id="current-email-value">Not set</span></p>
+                        <button type="button" id="edit-email-btn" class="settings-btn settings-btn-secondary">Edit</button>
+                    </div>
+
+                    <div id="email-edit-container" class="email-edit-container is-hidden">
+                        <label for="settings-email-input">New Email Address</label>
+                        <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
+                        <div class="email-edit-actions">
+                            <button id="save-email-btn" type="submit" class="settings-btn">Save Email</button>
+                            <button id="cancel-email-btn" type="button" class="settings-btn settings-btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+
                     <div id="email-settings-message" class="settings-message" role="status" aria-live="polite"></div>
                 </form>
             </div>
@@ -60,7 +70,8 @@
             <div class="settings-card">
                 <h3>Change Password</h3>
                 <p class="settings-description">Update your password using a strong combination of characters.</p>
-                <form id="password-settings-form" class="settings-form">
+                <form id="password-settings-form" class="settings-form" method="post" action="#">
+                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
                     <label for="settings-current-password">Current Password</label>
                     <input id="settings-current-password" type="password" autocomplete="current-password" placeholder="Current password">
 

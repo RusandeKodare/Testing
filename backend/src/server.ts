@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -14,6 +14,7 @@ import { createProfileRoutes } from './routes/profileRoutes';
 import { createOAuthRoutes } from './routes/oauthRoutes';
 import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
 
 dotenv.config();
@@ -23,6 +24,11 @@ const logger = getLogger('server');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const trustProxy = process.env.TRUST_PROXY === 'true';
+
+app.set('trust proxy', trustProxy);
+
+const resolveClientKey = (req: Request): string => req.ip || req.socket.remoteAddress || 'unknown';
 
 if (!JWT_SECRET || JWT_SECRET === 'please-change-this-to-a-random-256-bit-key-in-production') {
   console.error('ERROR: JWT_SECRET must be set in environment variables!');
@@ -75,6 +81,7 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 const profileLimiter = rateLimit({
@@ -83,6 +90,7 @@ const profileLimiter = rateLimit({
   message: 'Too many profile requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 const oauthLimiter = rateLimit({
@@ -91,10 +99,15 @@ const oauthLimiter = rateLimit({
   message: 'Too many OAuth requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' })); // Increased for profile picture uploads
+app.use('/api', createCsrfProtection([
+  '/auth/csrf',
+  '/health'
+]));
 
 async function startServer() {
   logger.info('Starting server initialization');

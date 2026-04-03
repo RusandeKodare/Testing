@@ -33,7 +33,8 @@ describe('AuthApiService', () => {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': ''
           },
           body: JSON.stringify({ username: 'testuser', password: 'password123' }),
           credentials: 'include'
@@ -85,7 +86,8 @@ describe('AuthApiService', () => {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': ''
           },
           body: JSON.stringify({ username: 'testuser', password: 'password123' }),
           credentials: 'include'

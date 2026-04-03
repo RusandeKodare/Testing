@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/UserRepository';
 import { getLogger } from '../utils/logger';
 import { AuthenticatedRequest, createAuthMiddleware } from '../middleware/authMiddleware';
+import { createEmailNotificationServiceFromEnv, EmailNotificationService } from '../services/EmailNotificationService';
 
 const logger = getLogger('profile');
 
@@ -105,7 +106,11 @@ function validateAndNormalizeProfileImage(profilePicture: string): { ok: true; n
   };
 }
 
-export function createProfileRoutes(userRepository: UserRepository, jwtSecret: string): Router {
+export function createProfileRoutes(
+  userRepository: UserRepository,
+  jwtSecret: string,
+  emailNotificationService: EmailNotificationService = createEmailNotificationServiceFromEnv()
+): Router {
   const router = Router();
   const authenticate = createAuthMiddleware(jwtSecret);
 
@@ -172,6 +177,11 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
     try {
       const userId = req.user?.userId;
       const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+      const requestIp = req.ip || req.socket?.remoteAddress || 'unknown';
+      const requestHeaders = req.headers || {};
+      const rawUserAgent = typeof requestHeaders['user-agent'] === 'string' ? requestHeaders['user-agent'] : 'unknown';
+      const requestUserAgent = rawUserAgent.replace(/[\r\n\t\x00-\x1F\x7F]/g, ' ').slice(0, 512).trim() || 'unknown';
+      const changedAtIso = new Date().toISOString();
 
       if (!userId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -189,6 +199,12 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
         return;
       }
 
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
       if (userRepository.emailExists(email, userId)) {
         res.status(409).json({ success: false, message: 'Email is already in use' });
         return;
@@ -197,6 +213,21 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
       userRepository.updateEmail(userId, email);
 
       logger.info({ userId }, 'Profile email updated');
+
+      void emailNotificationService.sendEmailChangeNotification({
+        userId,
+        username: user.username || 'user',
+        previousEmail: user.email || null,
+        newEmail: email,
+        changedAtIso,
+        ipAddress: requestIp,
+        userAgent: requestUserAgent
+      }).catch((error) => {
+        logger.error(
+          { userId, message: error instanceof Error ? error.message : String(error) },
+          'Failed to send email update notification'
+        );
+      });
 
       res.status(200).json({
         success: true,
@@ -246,6 +277,11 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
         return;
       }
 
+      if (!user.passwordHash) {
+        res.status(403).json({ success: false, message: 'Password update is not available for OAuth-only accounts' });
+        return;
+      }
+
       if (user.passwordHash) {
         if (!currentPassword) {
           res.status(400).json({ success: false, message: 'Current password is required' });
@@ -290,6 +326,12 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
         return;
       }
 
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
       const validation = validateAndNormalizeProfileImage(profilePicture);
       if (!validation.ok) {
         res.status(400).json({ success: false, message: validation.message });
@@ -316,6 +358,12 @@ export function createProfileRoutes(userRepository: UserRepository, jwtSecret: s
       const userId = req.user?.userId;
       if (!userId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
+        return;
+      }
+
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
         return;
       }
 

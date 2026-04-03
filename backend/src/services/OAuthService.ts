@@ -63,6 +63,25 @@ export class OAuthService {
     return { user, isNewUser };
   }
 
+  private generateUniqueOAuthUsername(email: string): string {
+    const localPart = email.split('@')[0] || 'user';
+    const sanitized = localPart.toLowerCase().replace(/[^a-z0-9._-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const base = (sanitized || 'user').slice(0, 24);
+
+    if (!this.userRepository.userExists(base)) {
+      return base;
+    }
+
+    for (let attempt = 1; attempt <= 1000; attempt += 1) {
+      const candidate = `${base}-${attempt}`.slice(0, 32);
+      if (!this.userRepository.userExists(candidate)) {
+        return candidate;
+      }
+    }
+
+    return `${base}-${crypto.randomBytes(3).toString('hex')}`.slice(0, 32);
+  }
+
   private async findOrCreateUser(oauthInfo: OAuthUserInfo): Promise<{ user: User; isNewUser: boolean }> {
     // Try to find existing OAuth user
     let user = await this.userRepository.findByOAuth('google', oauthInfo.sub);
@@ -78,7 +97,7 @@ export class OAuthService {
 
     // Create new OAuth user
     user = await this.userRepository.createOAuthUser({
-      username: oauthInfo.email.split('@')[0],
+      username: this.generateUniqueOAuthUsername(oauthInfo.email),
       email: oauthInfo.email,
       oauthProvider: 'google',
       oauthId: oauthInfo.sub,

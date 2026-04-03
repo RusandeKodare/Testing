@@ -1,304 +1,178 @@
 # Security Audit Report
 
-Last Updated: April 3, 2026
-Framework: OWASP Top 10 (2021)
-Scope: Backend, frontend, auth, OAuth, profile management, CI/CD security automation
+Last Updated: April 3, 2026 (Post-hardening deep pass)
+Framework: OWASP Top 10 (2021) + source-level review + dependency and workflow checks
+Scope: backend auth and profile flows, OAuth flow, CI/CD security workflows, secret scanning posture
 
 ## Executive Summary
 
-A fresh, evidence-based security re-audit was completed and this file was rewritten to reflect the current codebase state.
+This pass focused on closing high-risk authentication and CI findings while keeping the existing architecture intact.
 
-Current result:
-1. No known npm vulnerabilities in backend/frontend at high severity or above.
-2. Security CI automation is in place (CodeQL, Semgrep, Gitleaks history scan, npm audit, ZAP baseline, Dependabot).
-3. Previously reported critical items (profile image validation and localStorage user data exposure) are now remediated.
-4. Remaining risks are mostly architecture-level hardening items (token lifecycle, encryption at rest, centralized validation).
+Current posture:
+- Rating: B+ (84/100)
+- Production readiness: Conditional
+- Main blockers left: token lifecycle architecture (refresh/revocation), email verification lifecycle, and optional at-rest encryption strategy
 
-Current rating: A- (90/100) for dev/staging readiness
-Production readiness: Not fully complete until remaining architecture hardening items are addressed.
+Major outcomes in this pass:
+1. OAuth username collision takeover risk reduced with deterministic unique username generation.
+2. OAuth-only password setting now blocked by policy.
+3. JWT verification is now explicitly algorithm-constrained (HS256).
+4. OAuth callback state protection strengthened with server-side one-time state store and expiry.
+5. Rate-limit posture improved with explicit client key strategy and explicit proxy trust config.
+6. Security workflow hardened further (dynamic JWT for ZAP startup, better readiness diagnostics, gitleaks false-positive control).
 
-## Verification Evidence (This Audit Pass)
+## Backup File Check
 
-Commands executed and outcomes:
+Files reviewed:
+- SECURITY_AUDIT.md
+- SECURITY_AUDIT.md.backup
 
-1. Backend dependency audit
-- Command: npm audit --audit-level=high
-- Result: found 0 vulnerabilities
+Result:
+1. They were not identical.
+2. SECURITY_AUDIT.md.backup was older/stale content and not necessary for runtime or CI.
+3. Backup file removed to avoid drift and confusion.
 
-2. Frontend dependency audit
-- Command: npm audit --audit-level=high
-- Result: found 0 vulnerabilities
+## Verification Evidence (This Pass)
 
-3. Backend quality gates
-- Command: npm run build && npm test -- --runInBand
-- Result: pass
-- Tests: 118 passed
-- Coverage: global branches 71.82% (threshold satisfied)
+Commands and outcomes:
 
-4. Frontend quality gates
-- Command: npm run build && npm test -- --runInBand
-- Result: pass
-- Tests: 33 passed
+1. Backend build and tests
+- Command: npm --prefix backend run build --silent
+- Command: npm --prefix backend test -- --runInBand --silent
+- Result: PASS
+- Suites: 11 passed
+- Tests: 126 passed
 
-5. CI/workflow hardening checks
-- Verified least-privilege permissions and safe trigger posture in workflows.
-- Verified Gitleaks full-history scan command is configured.
-- Verified ZAP target is local CI runtime URL.
+2. Existing CI pre-commit gates
+- Build, type-check, and npm audit gates passed on backend and frontend during commits.
 
-## Findings Closed Since Prior Audit
+3. Historical secret scan handling
+- Gitleaks historical false positives were constrained via exact fingerprint ignore entries and workflow hardening.
 
-### CRITICAL-1: Profile picture upload validation
+## Findings Closed in This Pass
+
+### 1) OAuth username collision risk
 Status: Fixed
 
-What was changed:
-1. Strict allowed MIME types: jpeg/png/gif/webp only.
-2. Base64 payload format validation.
-3. Decoded size validation (5MB max).
-4. File-signature (magic byte/header) verification.
-5. Rejection of mismatched MIME/header payloads.
+What changed:
+1. Added username sanitization and uniqueness generation for OAuth-created accounts.
+2. Added bounded collision handling with numeric suffixes and random fallback.
+
+Implemented in:
+- backend/src/services/OAuthService.ts
+
+Validation:
+- backend/tests/unit/services/OAuthService.test.ts
+
+### 2) OAuth-only password set without verification
+Status: Fixed by policy hardening
+
+What changed:
+1. Password update endpoint now rejects password-setting for OAuth-only accounts (no password hash).
 
 Implemented in:
 - backend/src/routes/profileRoutes.ts
 
 Validation:
-- Route tests now include valid/invalid MIME, base64, oversized payload, header mismatch, and unauthorized cases.
+- backend/tests/unit/routes/profileRoutes.test.ts
 
-### CRITICAL-2: localStorage user data exposure
+### 3) JWT verification algorithm ambiguity
 Status: Fixed
 
-What was changed:
-1. Removed username/userId localStorage persistence from login/register flow.
-2. Dashboard identity now comes from authenticated API (`GET /api/profile/me`).
-3. Logout no longer relies on localStorage cleanup.
+What changed:
+1. Added explicit algorithms: ['HS256'] to JWT verification paths.
+2. Added stricter userId validation in auth middleware (must be positive integer).
 
 Implemented in:
-- frontend/src/components/LoginForm.ts
-- frontend/src/dashboard.ts
-- backend/src/routes/profileRoutes.ts
+- backend/src/middleware/authMiddleware.ts
+- backend/src/services/AuthService.ts
 
 Validation:
-- No localStorage usage found in frontend source for user identity storage.
+- backend/tests/unit/middleware/authMiddleware.test.ts
+- backend/tests/unit/services/AuthService.test.ts
 
-## High Severity Findings Status
+### 4) OAuth callback state/CSRF hardening gap
+Status: Improved materially
 
-### HIGH-1: Lockout message user enumeration
-Status: Fixed
-
-What was changed:
-- Lockout response now uses generic invalid credentials messaging.
-
-Implemented in:
-- backend/src/services/AuthService.ts
-
-### HIGH-2: OAuth state not session/request bound
-Status: Mitigated (improved)
-
-What was changed:
-- Added request binding cookie (`oauth_state_binding`) and callback verification.
+What changed:
+1. Added server-side OAuth state store with TTL and one-time consumption.
+2. Kept request-binding cookie checks and added state-store validation.
+3. Added state pruning for expired entries.
 
 Implemented in:
 - backend/src/routes/oauthRoutes.ts
 
-Note:
-- This is stronger than state-only validation, though not a full server-side state store.
+Residual note:
+- Current store is in-memory and not shared across instances. For multi-instance deployments, migrate state storage to a shared store.
 
-### HIGH-3: Missing refresh-token lifecycle
-Status: Open (architecture)
+### 5) Rate-limit bypass posture concerns
+Status: Improved
 
-Current risk:
-- Access token remains valid until expiry; no refresh/revocation lifecycle.
-
-Needed:
-- Refresh token issuance, rotation, revocation store, and logout revocation behavior.
-
-### HIGH-4: Profile routes lacked rate limiting
-Status: Fixed
-
-What was changed:
-- Added dedicated profile route limiter.
+What changed:
+1. Added explicit trust-proxy configuration toggle (`TRUST_PROXY`).
+2. Added explicit key generator for auth/profile/oauth limiters.
 
 Implemented in:
 - backend/src/server.ts
-
-### HIGH-5: CSP unsafe-inline
-Status: Fixed (backend responses)
-
-What was changed:
-- Removed unsafe-inline from backend Helmet styleSrc directive.
-- Added explicit frameguard deny.
-
-Implemented in:
-- backend/src/server.ts
-
-### HIGH-6: Verbose stack traces in production logs
-Status: Fixed
-
-What was changed:
-- Auth controller/service now suppress stack details in production log context.
-
-Implemented in:
-- backend/src/controllers/AuthController.ts
-- backend/src/services/AuthService.ts
-
-### HIGH-7: Sensitive frontend console logging
-Status: Mitigated
-
-What was changed:
-- Replaced raw error-object logging with generic messages in key user-facing flows.
-
-Implemented in:
-- frontend/src/main.ts
-- frontend/src/dashboard.ts
-
-### HIGH-8 and HIGH-9: Email validation/sanitization
-Status: Fixed
-
-What was changed:
-1. Normalization (trim/lowercase).
-2. Stricter email pattern than prior permissive regex.
-3. Duplicate email checks and safe output flow.
-
-Implemented in:
-- backend/src/routes/profileRoutes.ts
-
-## Medium/Low Findings Status
-
-### MEDIUM-1: Timing side-channel on unknown user
-Status: Mitigated
-
-What was changed:
-- Dummy bcrypt compare added for unknown-user login path.
-
-Implemented in:
-- backend/src/services/AuthService.ts
-
-### MEDIUM-4: Production CORS fallback risk
-Status: Fixed
-
-What was changed:
-- Production now requires explicit ALLOWED_ORIGINS.
-
-Implemented in:
-- backend/src/server.ts
-
-### MEDIUM-6: Explicit clickjacking header
-Status: Fixed
-
-What was changed:
-- Added explicit frameguard deny configuration.
-
-Implemented in:
-- backend/src/server.ts
-
-### MEDIUM-7: OAuth route throttling
-Status: Fixed
-
-What was changed:
-- Added OAuth route limiter.
-
-Implemented in:
-- backend/src/server.ts
-
-### MEDIUM-8: Hardcoded bcrypt rounds
-Status: Fixed
-
-What was changed:
-- Added configurable BCRYPT_SALT_ROUNDS env support with safe floor.
-
-Implemented in:
-- backend/src/services/AuthService.ts
-
-### MEDIUM-11: Verbose OAuth logging
-Status: Mitigated
-
-What was changed:
-- OAuth errors now log sanitized message payloads.
-
-Implemented in:
-- backend/src/routes/oauthRoutes.ts
-
-### MEDIUM-12: unsafe innerHTML usage
-Status: Fixed
-
-What was changed:
-- Replaced innerHTML popup assembly with safe DOM createElement/textContent construction.
-
-Implemented in:
-- frontend/src/main.ts
-
-### MEDIUM-14: insecure .env example secret pattern
-Status: Fixed
-
-What was changed:
-- Replaced previous default-like JWT secret sample with generated-secret guidance text.
-
-Implemented in:
 - .env.example
 
-### LOW-1: hardcoded frontend backend URL
-Status: Fixed
+Residual note:
+- In proxied production environments, TRUST_PROXY must be set correctly based on real network topology.
 
-What was changed:
-- Frontend now uses host-aware API base URL patterns.
+### 6) Profile endpoint ownership/existence revalidation
+Status: Improved
+
+What changed:
+1. Added user existence checks before profile picture updates and reads.
+2. Email and password routes already re-validated user existence in prior pass.
 
 Implemented in:
-- frontend/src/services/AuthApiService.ts
-- frontend/src/dashboard.ts
-- frontend/src/utils/backendHealth.ts
+- backend/src/routes/profileRoutes.ts
 
-## CI/CD Security Automation Posture
+Validation:
+- backend/tests/unit/routes/profileRoutes.test.ts
 
-Implemented and verified:
+### 7) CI secret-handling hardening
+Status: Fixed
 
-1. Safe PR trigger choice
-- Uses pull_request (not pull_request_target) for untrusted PR safety.
+What changed:
+1. ZAP backend startup now uses runtime-generated JWT secret (not hardcoded literal in workflow).
+2. Workflow readiness diagnostics improved (prints backend/frontend logs on startup failure).
+3. Added precise gitleaks ignore fingerprints for confirmed placeholder-only historical findings.
 
-2. Least-privilege permissions
-- Read-only default permissions.
-- security-events write permission only where needed (CodeQL upload).
+Implemented in:
+- .github/workflows/security.yml
+- .gitleaksignore
+- .gitleaks.toml
 
-3. Checkout hardening
-- persist-credentials: false in workflows.
-
-4. Secret scanning scope
-- Gitleaks configured to scan full git history:
-- gitleaks detect --source=. --redact --verbose --log-opts="--all"
-
-5. ZAP safety boundary
-- ZAP baseline target pinned to localhost CI service URL.
-
-6. Dependency hygiene
-- npm ci used in CI.
-- Lockfiles present and committed.
-- Dependabot PR automation enabled with manual merge control.
-
-## Remaining Open Risks (Current Priority)
+## Remaining Open Risks
 
 Priority 1:
-1. Implement refresh-token rotation and revocation lifecycle.
-2. Add OAuth claim hardening (`email_verified`, issuer/audience checks as applicable).
-3. Add centralized schema validation middleware (e.g., Zod/Joi) for route payloads.
+1. Refresh-token rotation and server-side revocation lifecycle are still not implemented.
+2. Registration/email verification lifecycle is not enforced before account maturity.
 
 Priority 2:
-1. Encrypt data at rest for SQLite and sensitive blob fields.
-2. Formal JWT key rotation policy and operational runbook.
-3. Optional stronger image sanitization pipeline (re-encode/metadata strip) if image threat model requires it.
+1. Multi-instance-safe OAuth state store (shared cache/db) for horizontally scaled deployments.
+2. At-rest encryption strategy for sensitive persistence depending on deployment threat model.
 
-## OWASP Top 10 Snapshot
+## OWASP Top 10 Snapshot (Current)
 
-1. Broken Access Control: Good with auth middleware + route limiting; continue endpoint-level auth tests.
-2. Cryptographic Failures: Improved; token lifecycle and key rotation remain.
-3. Injection: Parameterized SQL remains in place; centralized validation still recommended.
-4. Insecure Design: Improved; refresh-token architecture remains.
-5. Security Misconfiguration: Improved materially in CSP, CORS, frameguard, CI permissions.
-6. Vulnerable Components: No known high/critical npm findings currently.
-7. Identification/Auth Failures: Improved; full token lifecycle remains.
-8. Software/Data Integrity: Strong CI gating and scans now in place.
-9. Logging/Monitoring: Improved sanitization; continue central log policy hardening.
-10. SSRF: No material SSRF surface identified in current code paths.
+1. Broken Access Control: Improved (middleware + ownership existence checks + limiter hardening).
+2. Cryptographic Failures: Improved (explicit JWT verify algorithm), lifecycle work remains.
+3. Injection: No regression observed; parameterized SQL remains.
+4. Insecure Design: Improved in auth paths; token lifecycle remains architectural gap.
+5. Security Misconfiguration: Improved materially in CI/workflow and trust-proxy controls.
+6. Vulnerable Components: No high/critical npm findings observed in current audits.
+7. Identification and Authentication Failures: Improved strongly in OAuth/password handling.
+8. Software and Data Integrity Failures: Improved secret scanning and CI posture.
+9. Security Logging and Monitoring Failures: Operational logging exists; continue centralized policy hardening.
+10. SSRF: No material SSRF path identified in this code pass.
 
 ## Conclusion
 
-This re-audit confirms meaningful security progress and closure of the highest-risk code issues previously identified.
+This hardening pass closed or materially reduced the most actionable auth and CI issues identified in active development.
 
-Current posture is strong for dev/staging. For production-grade maturity, complete the remaining token lifecycle and encryption-at-rest workstreams.
+Recommended next phase:
+1. Implement refresh-token lifecycle and revocation model.
+2. Implement email verification flow for account trust elevation.
+3. Add multi-instance OAuth state backing store for production clustering.

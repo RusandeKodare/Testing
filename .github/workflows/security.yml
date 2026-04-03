@@ -2,7 +2,7 @@ name: Security Scans
 
 on:
   push:
-    branches: [ master ]
+    branches: [ Dev, master ]
   # Keep pull_request (not pull_request_target) to avoid elevated context on untrusted PRs.
   pull_request:
     branches: [ master ]
@@ -93,6 +93,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
       - name: Audit backend dependencies (high+)
         working-directory: ./backend
         run: npm audit --audit-level=high
@@ -111,7 +115,7 @@ jobs:
           /usr/local/bin/gitleaks version
 
       - name: Run Gitleaks (full history)
-        run: /usr/local/bin/gitleaks detect --source=. --redact --verbose --log-opts="--all"
+        run: /usr/local/bin/gitleaks detect --config=.gitleaks.toml --source=. --redact --verbose --log-opts="--all"
 
   zap-baseline:
     name: OWASP ZAP Baseline
@@ -142,12 +146,15 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
       - name: Start backend API
         working-directory: ./backend
-        env:
-          JWT_SECRET: test-secret-key-for-zap
-          NODE_ENV: test
         run: |
+          export JWT_SECRET="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")"
+          export NODE_ENV=test
           nohup npm run dev > ../backend-zap.log 2>&1 &
 
       - name: Start frontend server
@@ -157,19 +164,37 @@ jobs:
 
       - name: Wait for backend and frontend
         run: |
+          backend_ok=false
           for i in {1..40}; do
             if curl -fsS http://localhost:3000/api/health > /dev/null; then
+              backend_ok=true
               break
             fi
             sleep 2
           done
 
+          if [ "$backend_ok" != "true" ]; then
+            echo "Backend failed health check after waiting."
+            echo "--- backend-zap.log (last 200 lines) ---"
+            tail -n 200 backend-zap.log || true
+            exit 1
+          fi
+
+          frontend_ok=false
           for i in {1..40}; do
             if curl -fsS http://localhost:3001/ > /dev/null; then
+              frontend_ok=true
               break
             fi
             sleep 2
           done
+
+          if [ "$frontend_ok" != "true" ]; then
+            echo "Frontend failed health check after waiting."
+            echo "--- frontend-zap.log (last 200 lines) ---"
+            tail -n 200 frontend-zap.log || true
+            exit 1
+          fi
 
           curl -fsS http://localhost:3000/api/health > /dev/null
           curl -fsS http://localhost:3001/ > /dev/null
@@ -179,6 +204,7 @@ jobs:
         with:
           target: http://localhost:3001
           fail_action: true
-          cmd_options: '-a'
+          allow_issue_writing: false
+          cmd_options: '-a -c .zap/rules.tsv'
       - name: Note baseline scope
         run: echo "ZAP baseline is passive scanning only; use periodic active scans separately for deeper auth/business-logic testing."

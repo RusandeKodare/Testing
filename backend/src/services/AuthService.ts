@@ -209,7 +209,7 @@ export class AuthService {
 
   verifyToken(token: string): { id: number; username: string } | null {
     try {
-      const decoded = jwt.verify(token, this.jwtSecret) as { id: number; username: string };
+      const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] }) as { id: number; username: string };
       return decoded;
     } catch {
       return null;

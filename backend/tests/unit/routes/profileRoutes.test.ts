@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { createProfileRoutes } from '../../../src/routes/profileRoutes';
+import { EmailNotificationService } from '../../../src/services/EmailNotificationService';
 
 jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
@@ -17,7 +18,7 @@ type MockRepo = {
 };
 
 const mockRepo = (): MockRepo => ({
-  findById: jest.fn(),
+  findById: jest.fn().mockReturnValue({ id: 1, username: 'test-user', passwordHash: 'hash', email: 'test@example.com' }),
   emailExists: jest.fn(),
   updateEmail: jest.fn(),
   updatePasswordHash: jest.fn(),
@@ -176,6 +177,7 @@ describe('profileRoutes', () => {
 
   it('rejects duplicate email', async () => {
     const repo = mockRepo();
+    repo.findById.mockReturnValue({ id: 1, username: 'alice', email: 'alice@old.com' });
     repo.emailExists.mockReturnValue(true);
     const router = createProfileRoutes(repo as unknown as any, 'secret');
     const handler = getRouteHandler(router, '/settings/email', 'put');
@@ -188,16 +190,42 @@ describe('profileRoutes', () => {
     expect(json).toHaveBeenCalledWith({ success: false, message: 'Email is already in use' });
   });
 
+  it('rejects email update when user does not exist', async () => {
+    const repo = mockRepo();
+    repo.findById.mockReturnValue(null);
+    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const handler = getRouteHandler(router, '/settings/email', 'put');
+    const { res, status, json } = createRes();
+
+    await handler({ user: { userId: 77 }, body: { email: 'new@example.com' } }, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'User not found' });
+  });
+
   it('updates email for valid request', async () => {
     const repo = mockRepo();
+    repo.findById.mockReturnValue({ id: 7, username: 'alice', email: 'old@example.com' });
     repo.emailExists.mockReturnValue(false);
-    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const emailNotificationService: EmailNotificationService = {
+      sendEmailChangeNotification: jest.fn().mockResolvedValue(undefined)
+    };
+
+    const router = createProfileRoutes(repo as unknown as any, 'secret', emailNotificationService);
     const handler = getRouteHandler(router, '/settings/email', 'put');
     const { res, status, json } = createRes();
 
     await handler({ user: { userId: 7 }, body: { email: 'new@example.com' } }, res);
 
     expect(repo.updateEmail).toHaveBeenCalledWith(7, 'new@example.com');
+    expect(emailNotificationService.sendEmailChangeNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 7,
+        username: 'alice',
+        previousEmail: 'old@example.com',
+        newEmail: 'new@example.com'
+      })
+    );
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       success: true,
@@ -347,10 +375,9 @@ describe('profileRoutes', () => {
     expect(json).toHaveBeenCalledWith({ success: false, message: 'User not found' });
   });
 
-  it('updates password without current password for OAuth-only accounts', async () => {
+  it('rejects password update for OAuth-only accounts', async () => {
     const repo = mockRepo();
     repo.findById.mockReturnValue({ id: 3, username: 'oauth-user', passwordHash: null });
-    (bcrypt.hash as jest.Mock).mockResolvedValue('oauth-password-hash');
     const router = createProfileRoutes(repo as unknown as any, 'secret');
     const handler = getRouteHandler(router, '/settings/password', 'post');
     const { res, status, json } = createRes();
@@ -367,9 +394,35 @@ describe('profileRoutes', () => {
       res
     );
 
-    expect(repo.updatePasswordHash).toHaveBeenCalledWith(3, 'oauth-password-hash');
-    expect(status).toHaveBeenCalledWith(200);
-    expect(json).toHaveBeenCalledWith({ success: true, message: 'Password updated successfully' });
+    expect(repo.updatePasswordHash).not.toHaveBeenCalled();
+    expect(status).toHaveBeenCalledWith(403);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'Password update is not available for OAuth-only accounts' });
+  });
+
+  it('returns not found when profile picture upload user does not exist', async () => {
+    const repo = mockRepo();
+    repo.findById.mockReturnValue(null);
+    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const handler = getRouteHandler(router, '/picture', 'post');
+    const { res, status, json } = createRes();
+
+    await handler({ user: { userId: 5 }, body: { profilePicture: 'data:image/png;base64,AA==' } }, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'User not found' });
+  });
+
+  it('returns not found when profile picture read user does not exist', async () => {
+    const repo = mockRepo();
+    repo.findById.mockReturnValue(null);
+    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const handler = getRouteHandler(router, '/picture/me', 'get');
+    const { res, status, json } = createRes();
+
+    await handler({ user: { userId: 5 } }, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'User not found' });
   });
 
   it('updates profile picture for valid image payload', async () => {

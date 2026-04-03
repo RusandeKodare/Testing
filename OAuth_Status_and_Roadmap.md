@@ -11,10 +11,12 @@ This document replaces the original implementation-only plan with a live status 
 Implemented:
 1. Google OAuth provider integration in backend.
 2. Authorization code callback handling and token exchange on server.
-3. Server-side OAuth state generation and validation.
+3. Server-side OAuth state generation, storage, one-time validation, and expiry handling.
 4. Local user creation/lookup by `(oauth_provider, oauth_id)`.
 5. JWT session issuance after successful OAuth callback.
 6. Cookie-based app auth flow (`authToken` cookie).
+7. Collision-safe OAuth username generation with deterministic suffix fallback.
+8. OAuth route rate limiting in API server.
 
 Key files:
 1. `backend/src/services/OAuthService.ts`
@@ -27,10 +29,10 @@ Key files:
 These are the next improvements to complete OAuth hardening and reliability:
 
 1. Add PKCE to OAuth flow for defense in depth.
-2. Handle username collisions when creating OAuth users (email local-part can clash).
-3. Enforce `email_verified` from Google before creating/signing in.
-4. Add explicit OAuth route tests for invalid or replayed state.
-5. Decide whether you truly need offline access; if not, remove offline request mode. (Completed: offline mode removed)
+2. Enforce `email_verified` from Google before creating/signing in.
+3. Add explicit OAuth route tests for missing/invalid/replayed/expired state.
+4. Decide whether you truly need offline access; if not, keep offline request mode disabled. (Current: disabled)
+5. For multi-instance production, move OAuth state store to shared persistence (Redis/DB) instead of in-memory map.
 
 ## Recommended OAuth Path
 
@@ -49,11 +51,11 @@ And add:
 ### Phase 1: Security Hardening (Immediate)
 1. PKCE support end-to-end.
 2. `email_verified` enforcement.
-3. Remove `offline` mode if refresh token persistence is not needed. (Completed)
+3. Keep `offline` mode disabled unless refresh token persistence is implemented. (Completed)
 
 ### Phase 2: Reliability and Data Integrity
-1. Collision-safe username generation strategy.
-2. Add OAuth-specific route tests and replay-state tests.
+1. Add OAuth-specific route tests and replay-state tests.
+2. Move state store to shared backing store for horizontal scaling.
 
 ### Phase 3: Optional Expansion
 1. Add GitHub provider.
@@ -64,8 +66,9 @@ And add:
 ### 1) PKCE
 
 Current:
-1. State exists.
-2. PKCE is not yet implemented.
+1. State exists with server-side one-time store and expiry.
+2. Request binding checks exist.
+3. PKCE is not yet implemented.
 
 Needed:
 1. Generate code verifier and code challenge.
@@ -75,11 +78,10 @@ Needed:
 ### 2) Username Collision Handling
 
 Current:
-1. Username creation uses email local-part, which can collide.
+1. OAuth username generation is collision-safe using deterministic suffix fallback.
 
 Needed:
-1. Deterministic collision-safe generator (e.g. suffix or hash-based).
-2. Retry-safe repository logic for uniqueness conflicts.
+1. Optional: add explicit DB-level retry loop for rare create-time race collisions.
 
 ### 3) `email_verified` Enforcement
 
@@ -97,6 +99,7 @@ Add tests for:
 2. Invalid `state`.
 3. Replayed/expired `state`.
 4. Successful callback with valid `state`.
+5. State binding mismatch.
 
 ### 5) Offline Access Decision
 
@@ -112,8 +115,8 @@ Decision:
 OAuth hardening is complete when:
 1. PKCE is active and tested.
 2. Email verification is enforced.
-3. Username collision handling is safe and tested.
-4. State validation tests cover invalid and replay scenarios.
+3. State validation tests cover invalid, replay, expiry, and binding mismatch scenarios.
+4. Multi-instance-safe state storage is implemented (or deployment remains single-instance by design).
 5. Offline mode policy is explicitly decided and implemented.
 
 ## Notes
