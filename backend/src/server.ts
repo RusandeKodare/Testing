@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -23,6 +23,11 @@ const logger = getLogger('server');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const trustProxy = process.env.TRUST_PROXY === 'true';
+
+app.set('trust proxy', trustProxy);
+
+const resolveClientKey = (req: Request): string => req.ip || req.socket.remoteAddress || 'unknown';
 
 if (!JWT_SECRET || JWT_SECRET === 'please-change-this-to-a-random-256-bit-key-in-production') {
   console.error('ERROR: JWT_SECRET must be set in environment variables!');
@@ -75,6 +80,7 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 const profileLimiter = rateLimit({
@@ -83,6 +89,7 @@ const profileLimiter = rateLimit({
   message: 'Too many profile requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 const oauthLimiter = rateLimit({
@@ -91,6 +98,7 @@ const oauthLimiter = rateLimit({
   message: 'Too many OAuth requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: resolveClientKey,
 });
 
 app.use(cookieParser());

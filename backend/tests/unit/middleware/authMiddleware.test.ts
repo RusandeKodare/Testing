@@ -79,6 +79,8 @@ describe('authMiddleware', () => {
 
     middleware(req, res, next);
 
+    expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'secret', { algorithms: ['HS256'] });
+
     expect(req.user).toEqual({
       userId: 42,
       username: 'alice',
@@ -104,5 +106,21 @@ describe('authMiddleware', () => {
       email: undefined
     });
     expect(next).toHaveBeenCalled();
+  });
+
+  it('rejects token with non-positive user id', () => {
+    const middleware = createAuthMiddleware('secret');
+    const { res, status, json } = createRes();
+    const req = {
+      headers: { authorization: 'Bearer valid-token' },
+      cookies: {}
+    } as unknown as AuthenticatedRequest;
+    (jwt.verify as jest.Mock).mockReturnValue({ id: 0, username: 'alice' });
+
+    middleware(req, res, next);
+
+    expect(status).toHaveBeenCalledWith(401);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'Unauthorized' });
+    expect(next).not.toHaveBeenCalled();
   });
 });

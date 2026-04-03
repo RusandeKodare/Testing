@@ -6,6 +6,24 @@ import { getLogger } from '../utils/logger';
 
 const logger = getLogger('oauth');
 
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+
+type OAuthStateEntry = {
+  binding: string;
+  expiresAt: number;
+};
+
+const oauthStateStore = new Map<string, OAuthStateEntry>();
+
+function pruneExpiredStates(): void {
+  const now = Date.now();
+  for (const [state, entry] of oauthStateStore.entries()) {
+    if (entry.expiresAt <= now) {
+      oauthStateStore.delete(state);
+    }
+  }
+}
+
 function createRequestBinding(req: Request): string {
   const userAgent = req.headers['user-agent'] || 'unknown';
   return crypto.createHash('sha256').update(String(userAgent)).digest('hex');
@@ -22,19 +40,24 @@ export function createOAuthRoutes(
     try {
       const state = OAuthService.generateState();
       const binding = createRequestBinding(req);
+      pruneExpiredStates();
+      oauthStateStore.set(state, {
+        binding,
+        expiresAt: Date.now() + OAUTH_STATE_TTL_MS
+      });
 
       // Store state server-side for callback validation.
       res.cookie('oauth_state', state, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 10 * 60 * 1000,
+        maxAge: OAUTH_STATE_TTL_MS,
       });
       res.cookie('oauth_state_binding', binding, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 10 * 60 * 1000,
+        maxAge: OAUTH_STATE_TTL_MS,
       });
 
       const authUrl = oauthService.generateAuthUrl(state);
@@ -76,13 +99,25 @@ export function createOAuthRoutes(
       const expectedState = req.cookies?.oauth_state as string | undefined;
       const expectedBinding = req.cookies?.oauth_state_binding as string | undefined;
       const currentBinding = createRequestBinding(req);
-      if (!expectedState || expectedState !== state || !expectedBinding || expectedBinding !== currentBinding) {
+      const storedState = oauthStateStore.get(state);
+      const stateIsValid = Boolean(storedState) && (storedState as OAuthStateEntry).expiresAt > Date.now();
+
+      if (
+        !expectedState ||
+        expectedState !== state ||
+        !expectedBinding ||
+        expectedBinding !== currentBinding ||
+        !stateIsValid ||
+        storedState?.binding !== currentBinding
+      ) {
         res.status(400).json({
           success: false,
           message: 'Invalid OAuth state',
         });
         return;
       }
+
+      oauthStateStore.delete(state);
 
       res.clearCookie('oauth_state');
       res.clearCookie('oauth_state_binding');

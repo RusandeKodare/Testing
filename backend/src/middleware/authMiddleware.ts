@@ -22,23 +22,23 @@ export function createAuthMiddleware(jwtSecret: string) {
     }
 
     try {
-      const decoded = jwt.verify(token, jwtSecret) as {
+      const decodedWithAlg = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as {
         userId?: number;
         id?: number;
         username?: string;
         email?: string;
       };
 
-      const userId = decoded.userId ?? decoded.id;
-      if (!userId) {
+      const userId = decodedWithAlg.userId ?? decodedWithAlg.id;
+      if (!Number.isInteger(userId) || (userId as number) <= 0) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 
       req.user = {
-        userId,
-        username: decoded.username,
-        email: decoded.email
+        userId: userId as number,
+        username: decodedWithAlg.username,
+        email: decodedWithAlg.email
       };
 
       next();

@@ -276,6 +276,11 @@ export function createProfileRoutes(
         return;
       }
 
+      if (!user.passwordHash) {
+        res.status(403).json({ success: false, message: 'Password update is not available for OAuth-only accounts' });
+        return;
+      }
+
       if (user.passwordHash) {
         if (!currentPassword) {
           res.status(400).json({ success: false, message: 'Current password is required' });
@@ -320,6 +325,12 @@ export function createProfileRoutes(
         return;
       }
 
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
       const validation = validateAndNormalizeProfileImage(profilePicture);
       if (!validation.ok) {
         res.status(400).json({ success: false, message: validation.message });
@@ -346,6 +357,12 @@ export function createProfileRoutes(
       const userId = req.user?.userId;
       if (!userId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
+        return;
+      }
+
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
         return;
       }
 
