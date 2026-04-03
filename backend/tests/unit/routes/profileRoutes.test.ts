@@ -177,6 +177,7 @@ describe('profileRoutes', () => {
 
   it('rejects duplicate email', async () => {
     const repo = mockRepo();
+    repo.findById.mockReturnValue({ id: 1, username: 'alice', email: 'alice@old.com' });
     repo.emailExists.mockReturnValue(true);
     const router = createProfileRoutes(repo as unknown as any, 'secret');
     const handler = getRouteHandler(router, '/settings/email', 'put');
@@ -189,8 +190,22 @@ describe('profileRoutes', () => {
     expect(json).toHaveBeenCalledWith({ success: false, message: 'Email is already in use' });
   });
 
+  it('rejects email update when user does not exist', async () => {
+    const repo = mockRepo();
+    repo.findById.mockReturnValue(null);
+    const router = createProfileRoutes(repo as unknown as any, 'secret');
+    const handler = getRouteHandler(router, '/settings/email', 'put');
+    const { res, status, json } = createRes();
+
+    await handler({ user: { userId: 77 }, body: { email: 'new@example.com' } }, res);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(json).toHaveBeenCalledWith({ success: false, message: 'User not found' });
+  });
+
   it('updates email for valid request', async () => {
     const repo = mockRepo();
+    repo.findById.mockReturnValue({ id: 7, username: 'alice', email: 'old@example.com' });
     repo.emailExists.mockReturnValue(false);
     const emailNotificationService: EmailNotificationService = {
       sendEmailChangeNotification: jest.fn().mockResolvedValue(undefined)
@@ -203,10 +218,14 @@ describe('profileRoutes', () => {
     await handler({ user: { userId: 7 }, body: { email: 'new@example.com' } }, res);
 
     expect(repo.updateEmail).toHaveBeenCalledWith(7, 'new@example.com');
-    expect(emailNotificationService.sendEmailChangeNotification).toHaveBeenCalledWith({
-      userId: 7,
-      newEmail: 'new@example.com'
-    });
+    expect(emailNotificationService.sendEmailChangeNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 7,
+        username: 'alice',
+        previousEmail: 'old@example.com',
+        newEmail: 'new@example.com'
+      })
+    );
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       success: true,

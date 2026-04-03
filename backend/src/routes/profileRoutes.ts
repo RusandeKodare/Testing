@@ -177,6 +177,10 @@ export function createProfileRoutes(
     try {
       const userId = req.user?.userId;
       const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+      const requestIp = req.ip || req.socket?.remoteAddress || 'unknown';
+      const requestHeaders = req.headers || {};
+      const requestUserAgent = typeof requestHeaders['user-agent'] === 'string' ? requestHeaders['user-agent'] : 'unknown';
+      const changedAtIso = new Date().toISOString();
 
       if (!userId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -194,6 +198,12 @@ export function createProfileRoutes(
         return;
       }
 
+      const user = userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
       if (userRepository.emailExists(email, userId)) {
         res.status(409).json({ success: false, message: 'Email is already in use' });
         return;
@@ -203,7 +213,15 @@ export function createProfileRoutes(
 
       logger.info({ userId }, 'Profile email updated');
 
-      void emailNotificationService.sendEmailChangeNotification({ userId, newEmail: email }).catch((error) => {
+      void emailNotificationService.sendEmailChangeNotification({
+        userId,
+        username: user.username || 'user',
+        previousEmail: user.email || null,
+        newEmail: email,
+        changedAtIso,
+        ipAddress: requestIp,
+        userAgent: requestUserAgent
+      }).catch((error) => {
         logger.error(
           { userId, message: error instanceof Error ? error.message : String(error) },
           'Failed to send email update notification'
