@@ -22,6 +22,7 @@
                     <div class="profile-menu-content">
                         <a class="profile-menu-link" href="/dashboard.html">Dashboard</a>
                         <a class="profile-menu-link" href="/settings.html">Settings</a>
+                        <a class="profile-menu-link" href="/diary-entries.html">All Entries</a>
                         <button id="logout-btn" type="button" class="profile-menu-link profile-menu-button">Logout</button>
                     </div>
                 </details>
@@ -79,7 +80,7 @@
                     <div class="diary-form-actions">
                         <button id="diary-save-btn" type="submit" class="settings-btn">Save Entry</button>
                         <button id="diary-reset-btn" type="button" class="settings-btn settings-btn-secondary">Reset</button>
-                        <button id="diary-jump-all-btn" type="button" class="settings-btn settings-btn-secondary">See All Entries</button>
+                        <button id="diary-jump-all-btn" type="button" class="settings-btn settings-btn-secondary">Go to All Entries</button>
                     </div>
                     <div id="diary-message" class="settings-message" role="status" aria-live="polite"></div>
                 </form>
@@ -87,37 +88,10 @@
 
             <section class="settings-card diary-quick-card">
                 <h3>All Entries</h3>
-                <p>Use search and filters in the entries section for a clean overview across your full history.</p>
-                <button id="diary-open-all-btn" type="button" class="settings-btn">Open Entries List</button>
+                <p>Your full entries list is now on a separate page for a cleaner writing experience.</p>
+                <button id="diary-open-all-btn" type="button" class="settings-btn">Open Entries Page</button>
             </section>
         </div>
-
-        <section class="settings-card diary-feed" id="all-entries-section">
-            <div class="diary-feed-head">
-                <h3>All Entries</h3>
-                <button id="diary-back-compose-btn" type="button" class="settings-btn settings-btn-secondary">Back to Composer</button>
-            </div>
-            <div class="diary-filters">
-                <input id="diary-search" class="diary-filter" type="text" placeholder="Search title or content">
-                <select id="diary-filter-mood" class="diary-filter">
-                    <option value="">All moods</option>
-                    <option value="great">Great</option>
-                    <option value="good">Good</option>
-                    <option value="okay">Okay</option>
-                    <option value="bad">Bad</option>
-                    <option value="awful">Awful</option>
-                </select>
-                <input id="diary-filter-tag" class="diary-filter" type="text" placeholder="Tag filter">
-                <label class="diary-checkbox-row" for="diary-filter-favorite">
-                    <input id="diary-filter-favorite" class="diary-filter" type="checkbox">
-                    Favorites only
-                </label>
-            </div>
-
-            <div id="diary-entries-list" class="diary-entries-list">
-                <p class="diary-empty">No diary entries found. Start by writing your first entry.</p>
-            </div>
-        </section>
     </section>
 
     <script type="module" src="dist/diary.js"></script>

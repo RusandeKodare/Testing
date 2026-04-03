@@ -32,6 +32,12 @@ export interface DiaryMutationResponse {
   message?: string;
 }
 
+export interface DiarySingleResponse {
+  success: boolean;
+  entry?: DiaryEntryDto;
+  message?: string;
+}
+
 export class DiaryApiService {
   async listEntries(query: Record<string, string | undefined> = {}): Promise<DiaryListResponse> {
     const params = new URLSearchParams();
@@ -72,6 +78,14 @@ export class DiaryApiService {
       },
       credentials: 'include',
       body: JSON.stringify(payload)
+    });
+
+    return response.json();
+  }
+
+  async getEntry(entryId: number): Promise<DiarySingleResponse> {
+    const response = await fetch(`${API_BASE_URL}/entries/${entryId}`, {
+      credentials: 'include'
     });
 
     return response.json();

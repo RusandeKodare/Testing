@@ -10,10 +10,12 @@ const indexFilePath = path.join(__dirname, 'public', 'index.html');
 const dashboardFilePath = path.join(__dirname, 'public', 'dashboard.html');
 const settingsFilePath = path.join(__dirname, 'public', 'settings.html');
 const diaryFilePath = path.join(__dirname, 'public', 'diary.html');
+const diaryEntriesFilePath = path.join(__dirname, 'public', 'diary-entries.html');
 const indexTemplate = fs.readFileSync(indexFilePath, 'utf8');
 const dashboardTemplate = fs.readFileSync(dashboardFilePath, 'utf8');
 const settingsTemplate = fs.readFileSync(settingsFilePath, 'utf8');
 const diaryTemplate = fs.readFileSync(diaryFilePath, 'utf8');
+const diaryEntriesTemplate = fs.readFileSync(diaryEntriesFilePath, 'utf8');
 
 function createCsrfFormToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -106,6 +108,14 @@ app.get('/diary.html', (req, res) => {
   res.setHeader('Expires', '0');
   const csrfToken = createCsrfFormToken();
   res.type('html').send(renderHtmlWithCsrf(diaryTemplate, csrfToken));
+});
+
+app.get('/diary-entries.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  const csrfToken = createCsrfFormToken();
+  res.type('html').send(renderHtmlWithCsrf(diaryEntriesTemplate, csrfToken));
 });
 
 app.use(express.static(path.join(__dirname, 'public'), {

@@ -1211,6 +1211,13 @@ input.error {
     min-width: 110px;
 }
 
+.diary-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
 .diary-empty {
     color: #9eb8cf;
     padding: 24px 8px;

@@ -1,6 +1,6 @@
 import { reportBackendHealth } from './utils/backendHealth.js';
 import { initializeCsrfToken } from './utils/csrf.js';
-import { DiaryApiService, DiaryEntryDto } from './services/DiaryApiService.js';
+import { DiaryApiService } from './services/DiaryApiService.js';
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
@@ -25,7 +25,7 @@ class DiaryPage {
 
     this.setupEventListeners();
     this.setDefaultEntryDate();
-    await this.loadEntries();
+    await this.tryLoadEntryForEditing();
   }
 
   private async loadSessionUser(): Promise<boolean> {
@@ -61,13 +61,11 @@ class DiaryPage {
   private setupEventListeners(): void {
     const form = document.getElementById('diary-entry-form') as HTMLFormElement | null;
     const resetButton = document.getElementById('diary-reset-btn') as HTMLButtonElement | null;
-    const filters = document.querySelectorAll('.diary-filter');
     const logoutButton = document.getElementById('logout-btn') as HTMLButtonElement | null;
-    const openAllButtons = [
+    const openEntriesButtons = [
       document.getElementById('diary-jump-all-btn') as HTMLButtonElement | null,
       document.getElementById('diary-open-all-btn') as HTMLButtonElement | null
     ];
-    const backToComposerButton = document.getElementById('diary-back-compose-btn') as HTMLButtonElement | null;
 
     if (form) {
       form.addEventListener('submit', (event) => {
@@ -80,28 +78,13 @@ class DiaryPage {
       resetButton.addEventListener('click', () => this.resetForm());
     }
 
-    openAllButtons.forEach((button) => {
+    openEntriesButtons.forEach((button) => {
       if (!button) {
         return;
       }
 
       button.addEventListener('click', () => {
-        document.getElementById('all-entries-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-
-    if (backToComposerButton) {
-      backToComposerButton.addEventListener('click', () => {
-        document.getElementById('compose-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-
-    filters.forEach((input) => {
-      input.addEventListener('change', () => {
-        void this.loadEntries();
-      });
-      input.addEventListener('input', () => {
-        void this.loadEntries();
+        window.location.href = '/diary-entries.html';
       });
     });
 
@@ -112,6 +95,23 @@ class DiaryPage {
     }
 
     this.setupProfileMenuBehavior();
+  }
+
+  private async tryLoadEntryForEditing(): Promise<void> {
+    const params = new URLSearchParams(window.location.search);
+    const editId = Number(params.get('edit') || '0');
+    if (!Number.isInteger(editId) || editId <= 0) {
+      return;
+    }
+
+    const response = await this.api.getEntry(editId);
+    if (!response.success || !response.entry) {
+      this.showMessage(response.message || 'Could not load selected entry for editing', false);
+      return;
+    }
+
+    this.populateForm(response.entry);
+    this.showMessage('Editing selected entry', true);
   }
 
   private setupProfileMenuBehavior(): void {
@@ -167,84 +167,17 @@ class DiaryPage {
 
     this.showMessage(this.editingEntryId ? 'Entry updated' : 'Entry saved', true);
     this.resetForm();
-    await this.loadEntries();
   }
 
-  private async loadEntries(): Promise<void> {
-    const searchInput = document.getElementById('diary-search') as HTMLInputElement | null;
-    const moodFilterInput = document.getElementById('diary-filter-mood') as HTMLSelectElement | null;
-    const tagFilterInput = document.getElementById('diary-filter-tag') as HTMLInputElement | null;
-    const favoriteOnlyInput = document.getElementById('diary-filter-favorite') as HTMLInputElement | null;
-
-    const response = await this.api.listEntries({
-      search: searchInput?.value.trim() || undefined,
-      mood: moodFilterInput?.value || undefined,
-      tag: tagFilterInput?.value.trim().toLowerCase() || undefined,
-      favorite: favoriteOnlyInput?.checked ? 'true' : undefined,
-      limit: '50'
-    });
-
-    if (!response.success) {
-      this.showMessage(response.message || 'Unable to load entries', false);
-      return;
-    }
-
-    this.renderEntries(response.entries || []);
-  }
-
-  private renderEntries(entries: DiaryEntryDto[]): void {
-    const list = document.getElementById('diary-entries-list');
-    if (!list) {
-      return;
-    }
-
-    if (!entries.length) {
-      list.innerHTML = '<p class="diary-empty">No diary entries found. Start by writing your first entry.</p>';
-      return;
-    }
-
-    list.innerHTML = entries
-      .map((entry) => {
-        const mood = entry.mood ? `<span class="diary-chip">Mood: ${entry.mood}</span>` : '';
-        const favorite = entry.isFavorite ? '<span class="diary-chip diary-chip-fav">Favorite</span>' : '';
-        const tags = entry.tags.map((tag) => `<span class="diary-chip">#${tag}</span>`).join('');
-
-        return `
-          <article class="diary-entry-card" data-entry-id="${entry.id}">
-            <header class="diary-entry-header">
-              <h3>${this.escapeHtml(entry.title)}</h3>
-              <small>${new Date(entry.entryDate).toLocaleString()}</small>
-            </header>
-            <p>${this.escapeHtml(entry.content)}</p>
-            <div class="diary-meta">${mood}${favorite}${tags}</div>
-            <div class="diary-actions">
-              <button type="button" class="settings-btn diary-edit-btn" data-entry-id="${entry.id}">Edit</button>
-              <button type="button" class="settings-btn settings-btn-secondary diary-delete-btn" data-entry-id="${entry.id}">Delete</button>
-            </div>
-          </article>
-        `;
-      })
-      .join('');
-
-    list.querySelectorAll('.diary-edit-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = Number((btn as HTMLElement).getAttribute('data-entry-id') || '0');
-        const entry = entries.find((item) => item.id === id);
-        if (entry) {
-          this.populateForm(entry);
-        }
-      });
-    });
-
-    list.querySelectorAll('.diary-delete-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = Number((btn as HTMLElement).getAttribute('data-entry-id') || '0');
-        void this.deleteEntry(id);
-      });
-    });
-  }
-
-  private populateForm(entry: DiaryEntryDto): void {
+  private populateForm(entry: {
+    id: number;
+    title: string;
+    content: string;
+    mood: string | null;
+    tags: string[];
+    isFavorite: boolean;
+    entryDate: string;
+  }): void {
     this.editingEntryId = entry.id;
 
     const titleInput = document.getElementById('diary-title') as HTMLInputElement | null;
@@ -264,25 +197,6 @@ class DiaryPage {
     if (submitButton) submitButton.textContent = 'Update Entry';
   }
 
-  private async deleteEntry(entryId: number): Promise<void> {
-    if (!entryId) {
-      return;
-    }
-
-    const response = await this.api.deleteEntry(entryId);
-    if (!response.success) {
-      this.showMessage(response.message || 'Failed to delete entry', false);
-      return;
-    }
-
-    if (this.editingEntryId === entryId) {
-      this.resetForm();
-    }
-
-    this.showMessage('Entry deleted', true);
-    await this.loadEntries();
-  }
-
   private resetForm(): void {
     const form = document.getElementById('diary-entry-form') as HTMLFormElement | null;
     const submitButton = document.getElementById('diary-save-btn') as HTMLButtonElement | null;
@@ -297,6 +211,10 @@ class DiaryPage {
     if (submitButton) {
       submitButton.textContent = 'Save Entry';
     }
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url.toString());
   }
 
   private setDefaultEntryDate(force = false): void {
@@ -337,14 +255,6 @@ class DiaryPage {
     window.location.href = '/';
   }
 
-  private escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
