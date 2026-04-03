@@ -75,6 +75,21 @@ describe('DiaryApiService', () => {
     );
   });
 
+  it('gets one diary entry by id', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: async () => ({ success: true, entry: { id: 3 } })
+    });
+
+    await service.getEntry(3);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/diary/entries/3',
+      {
+        credentials: 'include'
+      }
+    );
+  });
+
   it('deletes diary entry with csrf header', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       json: async () => ({ success: true })
