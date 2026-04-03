@@ -144,10 +144,9 @@ jobs:
 
       - name: Start backend API
         working-directory: ./backend
-        env:
-          JWT_SECRET: test-secret-key-for-zap-0123456789abcdef
-          NODE_ENV: test
         run: |
+          export JWT_SECRET="$(node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")"
+          export NODE_ENV=test
           nohup npm run dev > ../backend-zap.log 2>&1 &
 
       - name: Start frontend server
