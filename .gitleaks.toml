@@ -10,5 +10,6 @@ paths = [
 ]
 regexTarget = "line"
 regexes = [
+  '''^generate_a_unique_64_char_secret_for_each_environment$''',
   '''^JWT_SECRET=generate_a_unique_64_char_secret_for_each_environment$''',
 ]
