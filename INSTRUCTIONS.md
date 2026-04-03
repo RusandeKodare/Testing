@@ -130,6 +130,28 @@ Do this:
 ### 4. Build and Test Before Committing 🏗️
 **MANDATORY** workflow before EVERY commit:
 
+Use the pre-commit hook as the enforcement mechanism for all checks.
+
+```bash
+# Install/refresh hooks (one-time after clone or when scripts change)
+./setup-hooks.sh
+# or on Windows:
+powershell -ExecutionPolicy Bypass -File .\\setup-hooks.ps1
+```
+
+The pre-commit hook runs all required checks automatically:
+
+1. Backend build (`npm run build`)
+2. Frontend build (`npm run build`)
+3. Backend TypeScript check (`npx tsc --noEmit`)
+4. Frontend TypeScript check (`npx tsc --noEmit`)
+5. Backend tests (`npm test`)
+6. Frontend tests (`npm test`)
+7. Backend dependency audit (`npm audit --audit-level=high`)
+8. Frontend dependency audit (`npm audit --audit-level=high`)
+
+Manual fallback (only if hooks are unavailable or for troubleshooting):
+
 ```bash
 # 1. Run TypeScript compilation
 cd backend && npm run build
@@ -144,8 +166,8 @@ cd ../backend && npx tsc --noEmit
 cd ../frontend && npx tsc --noEmit
 
 # 4. Run security audit
-cd ../backend && npm audit
-cd ../frontend && npm audit
+cd ../backend && npm audit --audit-level=high
+cd ../frontend && npm audit --audit-level=high
 
 # 5. If everything passes, commit
 git add .
