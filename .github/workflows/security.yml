@@ -146,6 +146,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
       - name: Start backend API
         working-directory: ./backend
         run: |
@@ -200,6 +204,7 @@ jobs:
         with:
           target: http://localhost:3001
           fail_action: true
+          allow_issue_writing: false
           cmd_options: '-a -c .zap/rules.tsv'
       - name: Note baseline scope
         run: echo "ZAP baseline is passive scanning only; use periodic active scans separately for deeper auth/business-logic testing."

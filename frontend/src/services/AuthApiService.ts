@@ -1,3 +1,5 @@
+import { getCsrfTokenFromCookie } from '../utils/csrf.js';
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -25,7 +27,8 @@ export class AuthApiService {
     const response = await fetch(`${this.baseUrl}/register`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfTokenFromCookie()
       },
       body: JSON.stringify(credentials),
       credentials: 'include'
@@ -38,7 +41,8 @@ export class AuthApiService {
     const response = await fetch(`${this.baseUrl}/login`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfTokenFromCookie()
       },
       body: JSON.stringify(credentials),
       credentials: 'include'

@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
     <title>Login System</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
@@ -20,6 +19,7 @@
             <div id="login-form" class="form-container active">
                 <h2>Welcome Back</h2>
                 <form id="login-form-element" method="post" action="#">
+                    <input type="hidden" name="csrf_token" value="present">
                     <div class="form-group">
                         <label for="login-username">Username</label>
                         <input type="text" id="login-username" name="username" required>
@@ -38,6 +38,7 @@
             <div id="register-form" class="form-container">
                 <h2>Create Account</h2>
                 <form id="register-form-element" method="post" action="#">
+                    <input type="hidden" name="csrf_token" value="present">
                     <div class="form-group">
                         <label for="register-username">Username</label>
                         <input type="text" id="register-username" name="username" required>

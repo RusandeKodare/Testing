@@ -1,4 +1,5 @@
 import { reportBackendHealth } from './utils/backendHealth.js';
+import { getCsrfTokenFromCookie, initializeCsrfToken } from './utils/csrf.js';
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
@@ -36,6 +37,7 @@ export class Dashboard {
 
   initialize(): void {
     void reportBackendHealth('backend-status-dashboard');
+    void initializeCsrfToken();
     void this.initializeSession();
   }
 
@@ -138,6 +140,7 @@ export class Dashboard {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfTokenFromCookie()
           },
           body: JSON.stringify({
             profilePicture: dataUrl,
@@ -213,7 +216,8 @@ export class Dashboard {
           const response = await fetch(`${API_BASE_URL}/api/profile/settings/email`, {
             method: 'PUT',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfTokenFromCookie()
             },
             body: JSON.stringify({ email }),
             credentials: 'include'
@@ -262,7 +266,8 @@ export class Dashboard {
           const response = await fetch(`${API_BASE_URL}/api/profile/settings/password`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfTokenFromCookie()
             },
             body: JSON.stringify({
               currentPassword,
@@ -382,6 +387,9 @@ export class Dashboard {
     try {
       await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
+        headers: {
+          'X-CSRF-Token': getCsrfTokenFromCookie()
+        },
         credentials: 'include',
       });
     } catch {

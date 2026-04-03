@@ -14,20 +14,58 @@ app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  const isStaticAsset = /\.(css|js|mjs|svg|png|jpg|jpeg|gif|webp|ico|txt|xml|map)$/i.test(req.path);
+  const isSensitiveStaticMeta = req.path === '/favicon.svg' || req.path === '/sitemap.xml';
+  const isReadRequest = req.method === 'GET' || req.method === 'HEAD';
+  if (isSensitiveStaticMeta && isReadRequest) {
+    res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate');
+    res.removeHeader('Pragma');
+    res.removeHeader('Expires');
+  } else if (isStaticAsset && isReadRequest) {
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    res.removeHeader('Pragma');
+    res.removeHeader('Expires');
+  } else if (isReadRequest) {
+    // HTML/document responses are safe to cache briefly for baseline scanners and browsers.
+    res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+    res.removeHeader('Pragma');
+    res.removeHeader('Expires');
+  } else {
+    // Non-idempotent requests remain non-storable.
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  res.setHeader('Vary', 'Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; connect-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:"
+    "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' http://localhost:3000; manifest-src 'self'; media-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content; sandbox allow-forms allow-same-origin allow-scripts"
   );
   next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  cacheControl: false
+}));
+
+app.use('/dist', express.static(path.join(__dirname, 'dist'), {
+  cacheControl: false
+}));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), { cacheControl: false });
+});
+
+app.post('/', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=60, must-revalidate');
+  res.removeHeader('Pragma');
+  res.removeHeader('Expires');
+  res.status(405).type('text/plain').send('Method Not Allowed');
+});
+
+app.use((req, res) => {
+  res.status(404).type('text/plain').send('Not Found');
 });
 
 app.listen(PORT, () => {

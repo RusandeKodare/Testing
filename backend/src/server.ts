@@ -14,6 +14,7 @@ import { createProfileRoutes } from './routes/profileRoutes';
 import { createOAuthRoutes } from './routes/oauthRoutes';
 import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
 
 dotenv.config();
@@ -103,6 +104,14 @@ const oauthLimiter = rateLimit({
 
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' })); // Increased for profile picture uploads
+app.use('/api', createCsrfProtection([
+  '/auth/login',
+  '/auth/register',
+  '/auth/csrf',
+  '/oauth/google/login',
+  '/oauth/google/callback',
+  '/health'
+]));
 
 async function startServer() {
   logger.info('Starting server initialization');

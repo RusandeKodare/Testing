@@ -1,6 +1,7 @@
 import { AuthApiService } from './services/AuthApiService.js';
 import { LoginForm } from './components/LoginForm.js';
 import { reportBackendHealth } from './utils/backendHealth.js';
+import { initializeCsrfToken } from './utils/csrf.js';
 
 // Global error handler for unimplemented features
 window.addEventListener('error', () => {
@@ -74,8 +75,9 @@ function showNotImplementedPopup(): void {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   void reportBackendHealth('backend-status');
+  await initializeCsrfToken();
 
   try {
     const authService = new AuthApiService();
