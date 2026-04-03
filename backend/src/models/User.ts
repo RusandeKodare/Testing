@@ -2,6 +2,7 @@ export interface User {
   id?: number;
   username: string;
   passwordHash: string;
+  profilePicture?: string | null;
   createdAt?: Date;
   loginAttempts?: number;
   lockedUntil?: Date | null;

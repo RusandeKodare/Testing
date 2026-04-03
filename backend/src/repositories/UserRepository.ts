@@ -16,7 +16,7 @@ export class UserRepository {
     this.dbConfig?.persistChanges();
 
     const result = this.db.exec(
-      'SELECT id, username, password_hash, created_at, login_attempts, locked_until FROM users WHERE username = ?',
+      'SELECT id, username, password_hash, profile_picture, created_at, login_attempts, locked_until FROM users WHERE username = ?',
       [username]
     );
 
@@ -29,15 +29,16 @@ export class UserRepository {
       id: row[0] as number,
       username: row[1] as string,
       passwordHash: row[2] as string,
-      createdAt: new Date(row[3] as string),
-      loginAttempts: row[4] as number,
-      lockedUntil: row[5] ? new Date(row[5] as string) : null
+      profilePicture: row[3] as string | null,
+      createdAt: new Date(row[4] as string),
+      loginAttempts: row[5] as number,
+      lockedUntil: row[6] ? new Date(row[6] as string) : null
     };
   }
 
   findByUsername(username: string): User | null {
     const result = this.db.exec(
-      'SELECT id, username, password_hash, created_at, login_attempts, locked_until FROM users WHERE username = ?',
+      'SELECT id, username, password_hash, profile_picture, created_at, login_attempts, locked_until FROM users WHERE username = ?',
       [username]
     );
 
@@ -50,15 +51,16 @@ export class UserRepository {
       id: row[0] as number,
       username: row[1] as string,
       passwordHash: row[2] as string,
-      createdAt: new Date(row[3] as string),
-      loginAttempts: row[4] as number,
-      lockedUntil: row[5] ? new Date(row[5] as string) : null
+      profilePicture: row[3] as string | null,
+      createdAt: new Date(row[4] as string),
+      loginAttempts: row[5] as number,
+      lockedUntil: row[6] ? new Date(row[6] as string) : null
     };
   }
 
   findById(id: number): User | null {
     const result = this.db.exec(
-      'SELECT id, username, password_hash, created_at, login_attempts, locked_until FROM users WHERE id = ?',
+      'SELECT id, username, password_hash, profile_picture, created_at, login_attempts, locked_until FROM users WHERE id = ?',
       [id]
     );
 
@@ -71,9 +73,10 @@ export class UserRepository {
       id: row[0] as number,
       username: row[1] as string,
       passwordHash: row[2] as string,
-      createdAt: new Date(row[3] as string),
-      loginAttempts: row[4] as number,
-      lockedUntil: row[5] ? new Date(row[5] as string) : null
+      profilePicture: row[3] as string | null,
+      createdAt: new Date(row[4] as string),
+      loginAttempts: row[5] as number,
+      lockedUntil: row[6] ? new Date(row[6] as string) : null
     };
   }
 
@@ -134,5 +137,27 @@ export class UserRepository {
 
     const count = result[0].values[0][0];
     return typeof count === 'number' && count > 0;
+  }
+
+  updateProfilePicture(userId: number, profilePictureData: string): void {
+    const stmt = this.db.prepare(
+      'UPDATE users SET profile_picture = ? WHERE id = ?'
+    );
+    stmt.run([profilePictureData, userId]);
+    stmt.free();
+    this.dbConfig?.persistChanges();
+  }
+
+  getProfilePicture(userId: number): string | null {
+    const result = this.db.exec(
+      'SELECT profile_picture FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (result.length === 0 || result[0].values.length === 0) {
+      return null;
+    }
+
+    return result[0].values[0][0] as string | null;
   }
 }

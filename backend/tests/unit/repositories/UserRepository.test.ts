@@ -15,6 +15,7 @@ describe('UserRepository', () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        profile_picture TEXT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         login_attempts INTEGER DEFAULT 0,
         locked_until DATETIME DEFAULT NULL
@@ -153,6 +154,54 @@ describe('UserRepository', () => {
       const lockedUser = userRepository.findByUsername('testuser')!;
 
       expect(userRepository.isAccountLocked(lockedUser)).toBe(true);
+    });
+  });
+
+  describe('updateProfilePicture', () => {
+    it('should update user profile picture', () => {
+      const user = userRepository.createUser('testuser', 'hashedpassword');
+      const profilePictureData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==';
+
+      userRepository.updateProfilePicture(user.id!, profilePictureData);
+      
+      const updatedUser = userRepository.findById(user.id!);
+      expect(updatedUser?.profilePicture).toBe(profilePictureData);
+    });
+
+    it('should overwrite existing profile picture', () => {
+      const user = userRepository.createUser('testuser', 'hashedpassword');
+      const firstPicture = 'data:image/png;base64,first';
+      const secondPicture = 'data:image/png;base64,second';
+
+      userRepository.updateProfilePicture(user.id!, firstPicture);
+      userRepository.updateProfilePicture(user.id!, secondPicture);
+      
+      const updatedUser = userRepository.findById(user.id!);
+      expect(updatedUser?.profilePicture).toBe(secondPicture);
+    });
+  });
+
+  describe('getProfilePicture', () => {
+    it('should return profile picture for user', () => {
+      const user = userRepository.createUser('testuser', 'hashedpassword');
+      const profilePictureData = 'data:image/png;base64,testdata';
+
+      userRepository.updateProfilePicture(user.id!, profilePictureData);
+      
+      const retrievedPicture = userRepository.getProfilePicture(user.id!);
+      expect(retrievedPicture).toBe(profilePictureData);
+    });
+
+    it('should return null for user without profile picture', () => {
+      const user = userRepository.createUser('testuser', 'hashedpassword');
+      
+      const retrievedPicture = userRepository.getProfilePicture(user.id!);
+      expect(retrievedPicture).toBeNull();
+    });
+
+    it('should return null for non-existent user', () => {
+      const retrievedPicture = userRepository.getProfilePicture(9999);
+      expect(retrievedPicture).toBeNull();
     });
   });
 });

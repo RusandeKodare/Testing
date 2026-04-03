@@ -33,6 +33,7 @@ export class DatabaseConfig {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        profile_picture TEXT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         login_attempts INTEGER DEFAULT 0,
         locked_until DATETIME DEFAULT NULL

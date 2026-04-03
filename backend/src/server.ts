@@ -9,6 +9,7 @@ import { UserRepository } from './repositories/UserRepository';
 import { AuthService } from './services/AuthService';
 import { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
+import { createProfileRoutes } from './routes/profileRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { getLogger } from './utils/logger';
 
@@ -67,7 +68,7 @@ const authLimiter = rateLimit({
 });
 
 app.use(cookieParser());
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '10mb' })); // Increased for profile picture uploads
 
 async function startServer() {
   logger.info('Starting server initialization');
@@ -87,6 +88,7 @@ async function startServer() {
   const authController = new AuthController(authService, authLogger);
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
+  app.use('/api/profile', createProfileRoutes(userRepository));
   
   app.use(errorHandler);
 
