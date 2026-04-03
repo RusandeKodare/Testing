@@ -1,17 +1,21 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { UserRepository } from '../repositories/UserRepository';
 import { getLogger } from '../utils/logger';
+import { AuthenticatedRequest, createAuthMiddleware } from '../middleware/authMiddleware';
 
 const logger = getLogger('profile');
 
-export function createProfileRoutes(userRepository: UserRepository): Router {
+export function createProfileRoutes(userRepository: UserRepository, jwtSecret: string): Router {
   const router = Router();
+  const authenticate = createAuthMiddleware(jwtSecret);
+
+  router.use(authenticate);
 
   // Upload/Update profile picture
-  router.post('/picture', async (req: Request, res: Response) => {
+  router.post('/picture', async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { profilePicture } = req.body;
-      const userId = req.body.userId; // Should come from JWT token in real implementation
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -52,13 +56,12 @@ export function createProfileRoutes(userRepository: UserRepository): Router {
     }
   });
 
-  // Get profile picture
-  router.get('/picture/:userId', async (req: Request, res: Response) => {
+  // Get own profile picture
+  router.get('/picture/me', async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-
-      if (isNaN(userId)) {
-        res.status(400).json({ success: false, message: 'Invalid user ID' });
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 

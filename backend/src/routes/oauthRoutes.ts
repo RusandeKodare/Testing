@@ -15,9 +15,15 @@ export function createOAuthRoutes(
   router.get('/google/login', (_req: Request, res: Response) => {
     try {
       const state = OAuthService.generateState();
-      
-      // In production, store state in session or Redis
-      // For now, we'll pass it in the URL
+
+      // Store state server-side for callback validation.
+      res.cookie('oauth_state', state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000,
+      });
+
       const authUrl = oauthService.generateAuthUrl(state);
 
       res.json({
@@ -37,8 +43,7 @@ export function createOAuthRoutes(
   // Handle Google OAuth callback
   router.get('/google/callback', async (req: Request, res: Response) => {
     try {
-      const { code } = req.query;
-      // Note: state parameter validation should be added for production CSRF protection
+      const { code, state } = req.query;
 
       if (!code || typeof code !== 'string') {
         res.status(400).json({
@@ -47,6 +52,25 @@ export function createOAuthRoutes(
         });
         return;
       }
+
+      if (!state || typeof state !== 'string') {
+        res.status(400).json({
+          success: false,
+          message: 'OAuth state is required',
+        });
+        return;
+      }
+
+      const expectedState = req.cookies?.oauth_state as string | undefined;
+      if (!expectedState || expectedState !== state) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid OAuth state',
+        });
+        return;
+      }
+
+      res.clearCookie('oauth_state');
 
       const { user, isNewUser } = await oauthService.handleCallback(code);
 

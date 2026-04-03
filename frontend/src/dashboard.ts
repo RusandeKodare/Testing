@@ -91,9 +91,9 @@ export class Dashboard {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`,
           },
           body: JSON.stringify({
-            userId: this.userId,
             profilePicture: dataUrl,
           }),
         });
@@ -120,7 +120,11 @@ export class Dashboard {
 
   private async loadProfilePicture(): Promise<void> {
     try {
-      const response = await fetch(`http://localhost:3000/api/profile/picture/${this.userId}`);
+      const response = await fetch('http://localhost:3000/api/profile/picture/me', {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+        },
+      });
       const result = await response.json();
 
       if (result.success && result.profilePicture) {

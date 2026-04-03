@@ -108,7 +108,7 @@ async function startServer() {
   }
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
-  app.use('/api/profile', createProfileRoutes(userRepository));
+  app.use('/api/profile', createProfileRoutes(userRepository, JWT_SECRET));
   
   app.use(errorHandler);
 
