@@ -49,7 +49,7 @@
             <div class="settings-card">
                 <h3>Contact Email</h3>
                 <p class="settings-description">Add or update your email address for account notifications.</p>
-                <form id="email-settings-form" class="settings-form">
+                <form id="email-settings-form" class="settings-form" method="post" action="#">
                     <div class="email-current-row">
                         <p class="email-current-text">Current email: <span id="current-email-value">Not set</span></p>
                         <button type="button" id="edit-email-btn" class="settings-btn settings-btn-secondary">Edit</button>
@@ -71,7 +71,7 @@
             <div class="settings-card">
                 <h3>Change Password</h3>
                 <p class="settings-description">Update your password using a strong combination of characters.</p>
-                <form id="password-settings-form" class="settings-form">
+                <form id="password-settings-form" class="settings-form" method="post" action="#">
                     <label for="settings-current-password">Current Password</label>
                     <input id="settings-current-password" type="password" autocomplete="current-password" placeholder="Current password">
 
