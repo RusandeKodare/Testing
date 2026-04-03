@@ -34,6 +34,15 @@ class ResendEmailNotificationService implements EmailNotificationService {
     this.supportEmail = supportEmail || fromEmail;
   }
 
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   async sendEmailChangeNotification(params: EmailChangeNotificationParams): Promise<void> {
     const subject = 'Email change confirmed for your account';
     const previousEmail = params.previousEmail || 'Not previously set';
@@ -53,26 +62,34 @@ class ResendEmailNotificationService implements EmailNotificationService {
       `If this was not you, contact support immediately at ${this.supportEmail}.`
     ].join('\n');
 
+    const safeUsername = this.escapeHtml(params.username);
+    const safePreviousEmail = this.escapeHtml(previousEmail);
+    const safeNewEmail = this.escapeHtml(params.newEmail);
+    const safeChangedAtIso = this.escapeHtml(params.changedAtIso);
+    const safeIpAddress = this.escapeHtml(ipAddress);
+    const safeUserAgent = this.escapeHtml(userAgent);
+    const safeSupportEmail = this.escapeHtml(this.supportEmail);
+
     const html = [
       '<div style="font-family:Segoe UI,Tahoma,Arial,sans-serif;line-height:1.5;color:#1f2937;max-width:640px;margin:0 auto;padding:18px;border:1px solid #e5e7eb;border-radius:12px;">',
-      `<h2 style="margin:0 0 8px 0;color:#0f172a;">Hey ${params.username}, you have successfully changed your email</h2>`,
+      `<h2 style="margin:0 0 8px 0;color:#0f172a;">Hey ${safeUsername}, you have successfully changed your email</h2>`,
       '<p style="margin:0 0 16px 0;color:#334155;">This is a security confirmation for your account settings update.</p>',
       '<h3 style="margin:0 0 8px 0;font-size:16px;color:#0f172a;">Security Activity Log</h3>',
       '<table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;">',
       '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;"><strong>Username</strong></td>',
-      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${params.username}</td></tr>`,
+      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${safeUsername}</td></tr>`,
       '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;"><strong>Previous Email</strong></td>',
-      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${previousEmail}</td></tr>`,
+      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${safePreviousEmail}</td></tr>`,
       '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;"><strong>New Email</strong></td>',
-      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${params.newEmail}</td></tr>`,
+      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${safeNewEmail}</td></tr>`,
       '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;"><strong>Changed At (UTC)</strong></td>',
-      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${params.changedAtIso}</td></tr>`,
+      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${safeChangedAtIso}</td></tr>`,
       '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;"><strong>IP Address</strong></td>',
-      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${ipAddress}</td></tr>`,
+      `<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">${safeIpAddress}</td></tr>`,
       '<tr><td style="padding:8px 10px;"><strong>User Agent</strong></td>',
-      `<td style="padding:8px 10px;">${userAgent}</td></tr>`,
+      `<td style="padding:8px 10px;">${safeUserAgent}</td></tr>`,
       '</table>',
-      `<p style="margin:16px 0 0 0;">If this was not you, contact support immediately at <a href="mailto:${this.supportEmail}">${this.supportEmail}</a>.</p>`,
+      `<p style="margin:16px 0 0 0;">If this was not you, contact support immediately at <a href="mailto:${safeSupportEmail}">${safeSupportEmail}</a>.</p>`,
       '</div>'
     ].join('');
 

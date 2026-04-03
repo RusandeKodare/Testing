@@ -1,10 +1,30 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+function createCsrfFormToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function renderHtmlWithCsrf(filePath, csrfToken) {
+  return fs.readFileSync(filePath, 'utf8').replace(/__CSRF_TOKEN__/g, csrfToken);
+}
+
+const frontendLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests, please try again later.'
+});
+
 app.disable('x-powered-by');
+app.use(frontendLimiter);
 
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
@@ -39,14 +59,10 @@ app.use((req, res, next) => {
   res.setHeader('Vary', 'Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' http://localhost:3000; manifest-src 'self'; media-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content; sandbox allow-forms allow-same-origin allow-scripts"
+    "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:3000; manifest-src 'self'; media-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content; sandbox allow-forms allow-same-origin allow-scripts"
   );
   next();
 });
-
-app.use(express.static(path.join(__dirname, 'public'), {
-  cacheControl: false
-}));
 
 app.use('/dist', express.static(path.join(__dirname, 'dist'), {
   cacheControl: false
@@ -54,8 +70,20 @@ app.use('/dist', express.static(path.join(__dirname, 'dist'), {
 
 app.get('/', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
-  res.sendFile(path.join(__dirname, 'public', 'index.html'), { cacheControl: false });
+  const csrfToken = createCsrfFormToken();
+  const indexFile = path.join(__dirname, 'public', 'index.html');
+  res.type('html').send(renderHtmlWithCsrf(indexFile, csrfToken));
 });
+
+app.get('/dashboard.html', (req, res) => {
+  const csrfToken = createCsrfFormToken();
+  const dashboardFile = path.join(__dirname, 'public', 'dashboard.html');
+  res.type('html').send(renderHtmlWithCsrf(dashboardFile, csrfToken));
+});
+
+app.use(express.static(path.join(__dirname, 'public'), {
+  cacheControl: false
+}));
 
 app.post('/', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=60, must-revalidate');

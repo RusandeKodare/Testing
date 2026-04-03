@@ -35,10 +35,10 @@ export class Dashboard {
     return currentEmailValue?.getAttribute('data-email') || '';
   }
 
-  initialize(): void {
+  async initialize(): Promise<void> {
     void reportBackendHealth('backend-status-dashboard');
-    void initializeCsrfToken();
-    void this.initializeSession();
+    await initializeCsrfToken();
+    await this.initializeSession();
   }
 
   private async initializeSession(): Promise<void> {
@@ -380,7 +380,7 @@ export class Dashboard {
   }
 
   private showNotImplemented(): void {
-    alert('NOT YET IMPLEMENTED');
+    this.showProfileUploadFeedback('This feature is not implemented yet.', false);
   }
 
   private async logout(): Promise<void> {
@@ -406,5 +406,5 @@ export class Dashboard {
 
 document.addEventListener('DOMContentLoaded', () => {
   const dashboard = new Dashboard();
-  dashboard.initialize();
+  void dashboard.initialize();
 });

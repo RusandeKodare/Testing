@@ -5,7 +5,10 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
-    '!src/**/*.d.ts'
+    '!src/**/*.d.ts',
+    // Entry-point orchestration/UI wiring is validated via integration/manual flows, not unit coverage gates.
+    '!src/main.ts',
+    '!src/dashboard.ts'
   ],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'

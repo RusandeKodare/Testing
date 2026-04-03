@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
     <title>Dashboard - Secure Login System</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
@@ -38,7 +37,7 @@
                 <div class="stat"><span>🔒</span> Fully Secured</div>
                 <div class="stat"><span>⚡</span> Active Session</div>
             </div>
-            <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+            <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
         </div>
     </section>
 
@@ -49,7 +48,7 @@
                 <h3>Contact Email</h3>
                 <p class="settings-description">Add or update your email address for account notifications.</p>
                 <form id="email-settings-form" class="settings-form" method="post" action="#">
-                    <input type="hidden" name="csrf_token" value="present">
+                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
                     <div class="email-current-row">
                         <p class="email-current-text">Current email: <span id="current-email-value">Not set</span></p>
                         <button type="button" id="edit-email-btn" class="settings-btn settings-btn-secondary">Edit</button>
@@ -72,7 +71,7 @@
                 <h3>Change Password</h3>
                 <p class="settings-description">Update your password using a strong combination of characters.</p>
                 <form id="password-settings-form" class="settings-form" method="post" action="#">
-                    <input type="hidden" name="csrf_token" value="present">
+                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
                     <label for="settings-current-password">Current Password</label>
                     <input id="settings-current-password" type="password" autocomplete="current-password" placeholder="Current password">
 

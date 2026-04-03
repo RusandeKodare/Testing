@@ -105,11 +105,7 @@ const oauthLimiter = rateLimit({
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' })); // Increased for profile picture uploads
 app.use('/api', createCsrfProtection([
-  '/auth/login',
-  '/auth/register',
   '/auth/csrf',
-  '/oauth/google/login',
-  '/oauth/google/callback',
   '/health'
 ]));
 
