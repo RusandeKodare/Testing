@@ -1,6 +1,6 @@
 # TestProject - Auth, OAuth, and Profile Persistence
 
-Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard/settings flows, Google OAuth support, persistent profile pictures, and profile settings (email + password updates).
+Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard/settings/diary flows, Google OAuth support, persistent profile pictures, profile settings (email + password updates), and a persisted personal diary.
 
 ## Security Status
 
@@ -21,6 +21,7 @@ Current snapshot (April 3, 2026):
 - Account lockout after repeated failed logins
 - Profile picture persistence in database (not browser-only)
 - Dedicated settings page (via profile menu) for updating account email and password
+- Personal diary with persistent entries (title/content/date), mood tracking, tags, favorites, and filtering
 - Structured security logging with redaction
 - Unit tests and coverage gates in backend and frontend
 
@@ -137,9 +138,8 @@ npm run test:detect-open-handles
 ```
 
 Current counts:
-- Backend: 126 tests
-- Frontend: 35 tests
-- Total: 161 tests
+- Backend and frontend test counts evolve as features are added.
+- Run `npm test` in each project folder to view the latest totals.
 
 ## API Overview
 
@@ -160,6 +160,13 @@ Profile settings:
 - `GET /api/profile/settings` (authenticated)
 - `PUT /api/profile/settings/email` (authenticated)
 - `POST /api/profile/settings/password` (authenticated)
+
+Diary:
+- `GET /api/diary/entries` (authenticated, supports search/filter/pagination)
+- `POST /api/diary/entries` (authenticated)
+- `GET /api/diary/entries/:id` (authenticated)
+- `PUT /api/diary/entries/:id` (authenticated)
+- `DELETE /api/diary/entries/:id` (authenticated)
 
 ## Git Hooks
 
