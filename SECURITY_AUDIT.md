@@ -3,7 +3,7 @@
 Last Updated: April 3, 2026
 Framework: OWASP Top 10 (2021)
 Scope: Backend, frontend, auth flows, OAuth flow, profile picture persistence
-Current Score: B+ (88/100)
+Current Score: A- (92/100)
 
 ## Executive Summary
 
@@ -18,8 +18,8 @@ Dependency audit results:
 
 High-level result:
 - No critical vulnerabilities identified.
-- Two high-priority findings require remediation before production.
-- Additional medium-priority hardening items remain.
+- Previously identified high-priority findings were remediated in code.
+- Medium-priority hardening items remain before production readiness.
 
 ## April 3, 2026 Re-Audit Delta
 
@@ -29,8 +29,12 @@ Newly verified secure controls:
 - Hook automation is now pre-commit and includes build validation for backend and frontend.
 
 Newly identified risks:
-- Frontend stores returned JWT in localStorage for bearer requests (session hijack risk under XSS).
-- OAuth `state` value is returned in `/api/oauth/google/login` response payload (unnecessary disclosure).
+- Profile picture input validation should be tightened to strict MIME whitelist and decoded-content verification.
+- Profile routes currently do not have dedicated rate-limiting middleware.
+
+Recently remediated:
+- Frontend no longer stores JWT in localStorage; cookie-based auth with `credentials: 'include'` is used.
+- OAuth `state` is no longer returned from `/api/oauth/google/login`.
 - Profile picture input validation should be tightened to strict MIME whitelist and decoded-content verification.
 - Profile routes currently do not have dedicated rate-limiting middleware.
 
@@ -53,7 +57,7 @@ Files reviewed:
 - `backend/src/middleware/authMiddleware.ts`
 
 ### 2. Cryptographic Failures
-Status: Needs Attention (high)
+Status: Secure
 
 What is secure:
 - Passwords are hashed with bcrypt.
@@ -61,11 +65,10 @@ What is secure:
 - Cookies are set httpOnly and secure in production.
 
 Risk:
-- Frontend stores JWT token in localStorage in login and register flows, which increases XSS impact and enables token exfiltration if an XSS sink is introduced.
+- No active high-risk cryptographic finding identified in current code paths.
 
 Recommendation:
-- Move to cookie-only auth flow on frontend and remove token from localStorage.
-- Add `credentials: 'include'` to frontend fetch calls and remove bearer token dependency in dashboard profile operations.
+- Keep cookie-first auth model and avoid re-introducing token storage in localStorage/sessionStorage.
 
 Files reviewed:
 - `backend/src/controllers/AuthController.ts`
@@ -94,7 +97,6 @@ What is secure:
 
 Recommendation:
 - Add threat model document before production release.
-- Remove `state` from OAuth login JSON response and keep state server-side only.
 
 ### 5. Security Misconfiguration
 Status: Needs Attention (medium)
@@ -164,17 +166,14 @@ Recommendation:
 ## Prioritized Remediation Plan
 
 Priority 1 (medium):
-Priority 1 (high):
-1. Remove localStorage token usage and rely on cookie-based auth session only.
-2. Stop returning OAuth `state` in `/api/oauth/google/login` response payload.
-3. Add strict profile picture MIME/content validation (`jpeg/png/gif/webp` only, verify decoded bytes).
+1. Add strict profile picture MIME/content validation (`jpeg/png/gif/webp` only, verify decoded bytes).
+2. Add profile route rate limiting.
+3. Add profile route tests for unauthorized/authorized scenarios.
+4. Add OAuth route tests for missing/invalid state scenarios.
 
 Priority 2 (hardening):
-1. Add profile route tests for unauthorized/authorized scenarios.
-2. Add OAuth route tests for missing/invalid state scenarios.
-3. Add profile route rate limiting.
-4. Add threat-model and incident-response runbook docs.
-5. Add password reset flow.
+1. Add threat-model and incident-response runbook docs.
+2. Add password reset flow.
 
 ## Verification Commands
 
@@ -193,4 +192,4 @@ cd ../TestProject.Tests && npm test
 
 ## Conclusion
 
-Security posture is improving and core controls are in place, but production readiness depends on closing the Priority 1 findings first, especially localStorage token exposure and OAuth state disclosure.
+Security posture is strong for development and staging. The two previously reported high findings are now closed in code, and the remaining work is medium-priority hardening before production.

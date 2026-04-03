@@ -27,7 +27,8 @@ export class AuthApiService {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(credentials)
+      body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     return await response.json();
@@ -39,7 +40,8 @@ export class AuthApiService {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(credentials)
+      body: JSON.stringify(credentials),
+      credentials: 'include'
     });
 
     return await response.json();

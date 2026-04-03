@@ -35,7 +35,8 @@ describe('AuthApiService', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ username: 'testuser', password: 'password123' })
+          body: JSON.stringify({ username: 'testuser', password: 'password123' }),
+          credentials: 'include'
         }
       );
       expect(result).toEqual(mockResponse);
@@ -86,7 +87,8 @@ describe('AuthApiService', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ username: 'testuser', password: 'password123' })
+          body: JSON.stringify({ username: 'testuser', password: 'password123' }),
+          credentials: 'include'
         }
       );
       expect(result).toEqual(mockResponse);

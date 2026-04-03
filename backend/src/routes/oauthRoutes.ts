@@ -29,7 +29,6 @@ export function createOAuthRoutes(
       res.json({
         success: true,
         authUrl,
-        state,
       });
     } catch (error) {
       logger.error({ error }, 'Failed to generate OAuth URL');

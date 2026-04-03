@@ -1,14 +1,12 @@
 export class Dashboard {
-  private token: string | null = null;
   private username: string | null = null;
   private userId: string | null = null;
 
   initialize(): void {
-    this.token = localStorage.getItem('authToken');
     this.username = localStorage.getItem('username');
     this.userId = localStorage.getItem('userId');
 
-    if (!this.token || !this.username || !this.userId) {
+    if (!this.username || !this.userId) {
       this.redirectToLogin();
       return;
     }
@@ -91,11 +89,11 @@ export class Dashboard {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`,
           },
           body: JSON.stringify({
             profilePicture: dataUrl,
           }),
+          credentials: 'include',
         });
 
         const result = await response.json();
@@ -121,9 +119,7 @@ export class Dashboard {
   private async loadProfilePicture(): Promise<void> {
     try {
       const response = await fetch('http://localhost:3000/api/profile/picture/me', {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-        },
+        credentials: 'include',
       });
       const result = await response.json();
 
@@ -143,8 +139,16 @@ export class Dashboard {
     alert('NOT YET IMPLEMENTED');
   }
 
-  private logout(): void {
-    localStorage.removeItem('authToken');
+  private async logout(): Promise<void> {
+    try {
+      await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Continue local cleanup even if backend logout request fails.
+    }
+
     localStorage.removeItem('username');
     localStorage.removeItem('userId');
     this.redirectToLogin();

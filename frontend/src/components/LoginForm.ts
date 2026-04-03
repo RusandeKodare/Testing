@@ -62,8 +62,7 @@ export class LoginForm {
           this.showMessage('login-message', 'Login successful! Redirecting...', 'success');
           form.reset();
           
-          if (result.token && result.user) {
-            localStorage.setItem('authToken', result.token);
+          if (result.user) {
             localStorage.setItem('username', result.user.username);
             localStorage.setItem('userId', result.user.id?.toString() || '');
             
@@ -128,8 +127,7 @@ export class LoginForm {
           this.showMessage('register-message', 'Registration successful! Please login.', 'success');
           form.reset();
           
-          if (result.token && result.user) {
-            localStorage.setItem('authToken', result.token);
+          if (result.user) {
             localStorage.setItem('username', result.user.username);
             localStorage.setItem('userId', result.user.id?.toString() || '');
           }
