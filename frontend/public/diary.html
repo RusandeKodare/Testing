@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diary - Secure Login System</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="backend-status-dashboard" class="backend-status-banner" role="status" aria-live="polite"></div>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-logo" href="/dashboard.html" aria-label="Go to dashboard">🔐 SecureAuth</a>
+            <div class="navbar-right">
+                <div class="profile-nav">
+                    <img id="profile-avatar-nav" class="profile-avatar-nav" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
+                    <span id="username-nav">User</span>
+                </div>
+                <details class="profile-menu" aria-label="Profile menu">
+                    <summary class="profile-menu-trigger">Menu</summary>
+                    <div class="profile-menu-content">
+                        <a class="profile-menu-link" href="/dashboard.html">Dashboard</a>
+                        <a class="profile-menu-link" href="/settings.html">Settings</a>
+                        <button id="logout-btn" type="button" class="profile-menu-link profile-menu-button">Logout</button>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </nav>
+
+    <section class="section-container diary-shell">
+        <div class="diary-page-head">
+            <h1><span id="diary-username">User</span>'s Diary</h1>
+            <p>Capture your day with mood and tags, then browse everything in one focused place.</p>
+        </div>
+
+        <div class="diary-layout">
+            <aside class="settings-card diary-composer" id="compose-section">
+                <div class="diary-card-head">
+                    <h3 id="diary-form-title">Write Entry</h3>
+                    <p>Default date is set to now. Change it anytime before saving.</p>
+                </div>
+                <form id="diary-entry-form" class="settings-form" method="post" action="#">
+                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
+
+                    <label for="diary-title">Title</label>
+                    <input id="diary-title" type="text" maxlength="120" placeholder="How was today?">
+
+                    <label for="diary-content">Entry</label>
+                    <textarea id="diary-content" class="diary-textarea" maxlength="10000" placeholder="Write your thoughts..." required></textarea>
+
+                    <div class="diary-inline-fields">
+                        <div>
+                            <label for="diary-mood">Mood</label>
+                            <select id="diary-mood">
+                                <option value="">Not set</option>
+                                <option value="great">Great</option>
+                                <option value="good">Good</option>
+                                <option value="okay">Okay</option>
+                                <option value="bad">Bad</option>
+                                <option value="awful">Awful</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="diary-entry-date">Entry Date</label>
+                            <input id="diary-entry-date" type="datetime-local">
+                        </div>
+                    </div>
+
+                    <label for="diary-tags">Tags (comma-separated)</label>
+                    <input id="diary-tags" type="text" placeholder="gratitude, work, travel">
+
+                    <label class="diary-checkbox-row" for="diary-favorite">
+                        <input id="diary-favorite" type="checkbox">
+                        Mark as favorite
+                    </label>
+
+                    <div class="diary-form-actions">
+                        <button id="diary-save-btn" type="submit" class="settings-btn">Save Entry</button>
+                        <button id="diary-reset-btn" type="button" class="settings-btn settings-btn-secondary">Reset</button>
+                        <button id="diary-jump-all-btn" type="button" class="settings-btn settings-btn-secondary">See All Entries</button>
+                    </div>
+                    <div id="diary-message" class="settings-message" role="status" aria-live="polite"></div>
+                </form>
+            </aside>
+
+            <section class="settings-card diary-quick-card">
+                <h3>All Entries</h3>
+                <p>Use search and filters in the entries section for a clean overview across your full history.</p>
+                <button id="diary-open-all-btn" type="button" class="settings-btn">Open Entries List</button>
+            </section>
+        </div>
+
+        <section class="settings-card diary-feed" id="all-entries-section">
+            <div class="diary-feed-head">
+                <h3>All Entries</h3>
+                <button id="diary-back-compose-btn" type="button" class="settings-btn settings-btn-secondary">Back to Composer</button>
+            </div>
+            <div class="diary-filters">
+                <input id="diary-search" class="diary-filter" type="text" placeholder="Search title or content">
+                <select id="diary-filter-mood" class="diary-filter">
+                    <option value="">All moods</option>
+                    <option value="great">Great</option>
+                    <option value="good">Good</option>
+                    <option value="okay">Okay</option>
+                    <option value="bad">Bad</option>
+                    <option value="awful">Awful</option>
+                </select>
+                <input id="diary-filter-tag" class="diary-filter" type="text" placeholder="Tag filter">
+                <label class="diary-checkbox-row" for="diary-filter-favorite">
+                    <input id="diary-filter-favorite" class="diary-filter" type="checkbox">
+                    Favorites only
+                </label>
+            </div>
+
+            <div id="diary-entries-list" class="diary-entries-list">
+                <p class="diary-empty">No diary entries found. Start by writing your first entry.</p>
+            </div>
+        </section>
+    </section>
+
+    <script type="module" src="dist/diary.js"></script>
+</body>
+</html>
