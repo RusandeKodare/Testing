@@ -1,5 +1,6 @@
 import { DatabaseConfig } from '../../../src/config/database';
 import * as fs from 'fs';
+import initSqlJs from 'sql.js';
 
 describe('DatabaseConfig', () => {
   const testDbPath = './test-db.sqlite';
@@ -41,6 +42,39 @@ describe('DatabaseConfig', () => {
       const result = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
 
       expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should migrate legacy users table schema for existing databases', async () => {
+      const SQL = await initSqlJs();
+      const legacyDb = new SQL.Database();
+      legacyDb.run(`
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      const data = legacyDb.export();
+      fs.writeFileSync(testDbPath, data);
+      legacyDb.close();
+
+      dbConfig = new DatabaseConfig(testDbPath);
+      await dbConfig.initialize();
+
+      const db = dbConfig.getDatabase();
+      const columnsResult = db.exec('PRAGMA table_info(users)');
+      const columns = columnsResult[0].values.map((row) => String(row[1]));
+
+      expect(columns).toContain('profile_picture');
+      expect(columns).toContain('email');
+      expect(columns).toContain('oauth_provider');
+      expect(columns).toContain('oauth_id');
+      expect(columns).toContain('login_attempts');
+      expect(columns).toContain('locked_until');
+
+      const indexResult = db.exec("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_oauth_user'");
+      expect(indexResult.length).toBeGreaterThan(0);
     });
   });
 

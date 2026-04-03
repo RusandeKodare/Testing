@@ -12,6 +12,7 @@ import { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createProfileRoutes } from './routes/profileRoutes';
 import { createOAuthRoutes } from './routes/oauthRoutes';
+import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { getLogger } from './utils/logger';
 
@@ -109,6 +110,7 @@ async function startServer() {
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
   app.use('/api/profile', createProfileRoutes(userRepository, JWT_SECRET));
+  app.use('/api/health', createHealthRoutes());
   
   app.use(errorHandler);
 
