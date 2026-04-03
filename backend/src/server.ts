@@ -17,7 +17,6 @@ import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
-import { getOAuthConfigLogDecision } from './utils/oauthConfigStatus';
 import { DiaryRepository } from './repositories/DiaryRepository';
 
 dotenv.config();
@@ -145,12 +144,6 @@ async function startServer() {
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/oauth/google/callback';
 
-  const oauthLogDecision = getOAuthConfigLogDecision(
-    process.env.NODE_ENV,
-    Boolean(googleClientId),
-    Boolean(googleClientSecret)
-  );
-
   if (googleClientId && googleClientSecret) {
     const oauthService = new OAuthService(
       userRepository,
@@ -159,12 +152,12 @@ async function startServer() {
       googleRedirectUri
     );
     app.use('/api/oauth', oauthLimiter, createOAuthRoutes(oauthService, JWT_SECRET));
-  }
-
-  if (oauthLogDecision.level === 'warn') {
-    logger.warn(oauthLogDecision.message);
   } else {
-    logger.info(oauthLogDecision.message);
+    if (process.env.NODE_ENV === 'development') {
+      logger.info('Google OAuth credentials not configured. OAuth login is disabled in development until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.');
+    } else {
+      logger.warn('Google OAuth credentials not configured - OAuth login disabled');
+    }
   }
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
