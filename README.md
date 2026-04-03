@@ -1,341 +1,197 @@
-# TestProject - Login System
+# TestProject - Auth, OAuth, and Profile Persistence
 
-A secure, full-stack login system built with TypeScript, featuring clean architecture, JWT authentication, and comprehensive testing. **Created in collaboration with GitHub Copilot AI.**
+Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard flows, Google OAuth support, and persistent profile pictures stored in the database.
 
-## ⚠️ Security Notice
+## Security Status
 
-This application has been audited against the **OWASP Top 10** security framework. Critical security fixes have been implemented. **Security Score: A- (92/100)**
+The project is tracked against OWASP Top 10 in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 
-**See `SECURITY_AUDIT.md` for a comprehensive, living security audit document.**
+Current snapshot (April 3, 2026):
+- No known npm dependency vulnerabilities in backend/frontend (`npm audit` clean).
+- OAuth state validation is enforced server-side.
+- Profile picture routes require authenticated user context from JWT.
 
-## Features
+## Main Features
 
-- **User Registration & Login** with JWT tokens
-- **Password Security**: bcrypt hashing with salt rounds
-- **Input Validation**: Both frontend and backend validation
-- **Account Lockout**: Brute force protection (5 failed attempts = 30-min lock)
-- **Security Event Logging**: Winston-based audit trail
-- **Strong Password Policy**: 8+ chars with uppercase, lowercase, numbers, special chars
-- **Password Confirmation**: Prevents user typos
-- **httpOnly Cookies**: XSS-resistant token storage
-- **Dark Mode UI**: Clean, animated interface
-- **SQLite Database**: Lightweight, file-based storage
-- **Comprehensive Tests**: 65 tests with >90% coverage
-- **Clean Architecture**: Single Responsibility Principle throughout
+- Local registration and login
+- Google OAuth login flow
+- JWT auth with 1-hour token lifetime
+- httpOnly auth cookie support
+- Account lockout after repeated failed logins
+- Profile picture persistence in database (not browser-only)
+- Structured security logging with redaction
+- Unit tests and coverage gates in backend and frontend
 
 ## Project Structure
 
-```
+```text
 TestProject/
-├── backend/                    # Backend API (Node.js + Express + TypeScript)
-│   ├── src/
-│   │   ├── config/            # Database configuration
-│   │   ├── models/            # Data models and interfaces
-│   │   ├── repositories/      # Data access layer
-│   │   ├── services/          # Business logic
-│   │   ├── controllers/       # Request handlers
-│   │   ├── routes/            # API routes
-│   │   ├── middleware/        # Error handling
-│   │   └── server.ts          # Application entry point
-│   └── tests/unit/            # Backend unit tests
-│
-├── frontend/                   # Frontend (TypeScript + HTML/CSS)
-│   ├── src/
-│   │   ├── components/        # UI components
-│   │   ├── services/          # API services
-│   │   ├── utils/             # Validation utilities
-│   │   └── main.ts            # Application entry point
-│   ├── public/
-│   │   ├── index.html         # Login page
-│   │   └── styles.css         # Dark mode styling
-│   └── tests/unit/            # Frontend unit tests
-│
-└── TestProject.Tests/          # Test orchestration
-    ├── backend/unit/          # Backend test copies
-    └── frontend/unit/         # Frontend test copies
+  backend/
+    src/
+      config/
+      controllers/
+      middleware/
+      models/
+      repositories/
+      routes/
+      services/
+      utils/
+      server.ts
+    tests/unit/
+  frontend/
+    src/
+      components/
+      services/
+      utils/
+      dashboard.ts
+      main.ts
+    public/
+    tests/unit/
+  TestProject.Tests/
 ```
 
-## Technology Stack
+## Tech Stack
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express
-- **Language**: TypeScript (strict mode)
-- **Database**: SQLite (sql.js)
-- **Authentication**: JWT (jsonwebtoken)
-- **Password Hashing**: bcryptjs
-- **Testing**: Jest + ts-jest
+Backend:
+- Node.js + Express
+- TypeScript
+- sql.js (SQLite)
+- jsonwebtoken + cookie-parser
+- bcryptjs
+- googleapis
+- pino logging
 
-### Frontend
-- **Language**: TypeScript
-- **UI**: HTML5 + CSS3 (Dark Mode)
-- **HTTP Client**: Fetch API
-- **Testing**: Jest + jsdom
+Frontend:
+- TypeScript + HTML/CSS
+- Fetch API
+- Jest + jsdom
 
-## Installation
+## Setup
 
-### Prerequisites
-- Node.js (v18 or higher)
+Prerequisites:
+- Node.js 18+
 - npm
 
-### Backend Setup
+Install backend:
 ```bash
 cd backend
 npm install
 npm run build
 ```
 
-### Frontend Setup
+Install frontend:
 ```bash
 cd frontend
 npm install
 npm run build
 ```
 
-### Test Project Setup
+Install test orchestrator:
 ```bash
 cd TestProject.Tests
 npm install
 ```
 
-## Running the Application
+## Run
 
-### Start Backend Server (Port 3000)
+Backend:
 ```bash
 cd backend
 npm run dev
 ```
 
-### Start Frontend Server (Port 3001)
+Frontend:
 ```bash
 cd frontend
 npm run serve
 ```
 
-### Access the Application
-Open your browser and navigate to: `http://localhost:3001`
+Open: http://localhost:3001
 
-## Running Tests
+## Test
 
-### All Tests
+All:
 ```bash
 cd TestProject.Tests
 npm test
 ```
 
-### Backend Tests Only
+Backend:
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend Tests Only
+Frontend:
 ```bash
 cd frontend
 npm test
 ```
 
-## API Endpoints
+Current counts:
+- Backend: 76 tests
+- Frontend: 27 tests
+- Total: 103 tests
 
-### POST /api/auth/register
-Register a new user.
+## API Overview
 
-**Request Body:**
-```json
-{
-  "username": "testuser",
-  "password": "password123"
-}
-```
+Auth:
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
 
-**Response (201):**
-```json
-{
-  "success": true,
-  "message": "Registration successful",
-  "token": "eyJhbGc...",
-  "user": {
-    "id": 1,
-    "username": "testuser"
-  }
-}
-```
+OAuth:
+- `GET /api/oauth/google/login`
+- `GET /api/oauth/google/callback`
 
-### POST /api/auth/login
-Login with existing credentials.
+Profile picture:
+- `POST /api/profile/picture` (authenticated)
+- `GET /api/profile/picture/me` (authenticated)
 
-**Request Body:**
-```json
-{
-  "username": "testuser",
-  "password": "password123"
-}
-```
+## Git Hooks
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "token": "eyJhbGc...",
-  "user": {
-    "id": 1,
-    "username": "testuser"
-  }
-}
-```
+Hook setup scripts install a `pre-commit` hook that validates quality before commit.
 
-## Validation Rules
-
-### Username
-- Minimum 3 characters
-- Alphanumeric only (a-z, A-Z, 0-9)
-- Required
-
-### Password
-- Minimum 8 characters
-- Must contain at least 1 number
-- Required
-
-## Security Features
-
-- **Password Hashing**: bcrypt with 10 salt rounds
-- **JWT Tokens**: 24-hour expiration
-- **SQL Injection Prevention**: Parameterized queries
-- **Input Validation**: Frontend and backend validation
-- **CORS Enabled**: For local development
-
-## Test Coverage
-
-### Backend (96.07% coverage)
-- **DatabaseConfig**: 8 tests - Database initialization, save, close
-- **User Model**: 3 tests - Interface validation
-- **UserRepository**: 8 tests - CRUD operations
-- **AuthService**: 9 tests - Registration, login, token verification
-- **AuthController**: 10 tests - HTTP request handling
-
-**Total: 38 tests, 100% passing**
-
-### Frontend (91.30% coverage)
-- **Validator**: 15 tests - Username and password validation
-- **AuthApiService**: 5 tests - API communication
-- **LoginForm**: 7 tests - Form logic, validation, submission
-
-**Total: 27 tests, 100% passing**
-
-### Overall
-**65 tests, 100% passing**
-
-## Architecture Principles
-
-### Single Responsibility Principle
-Each module has exactly one reason to change:
-- **Models**: Data structure definitions only
-- **Repositories**: Data access only
-- **Services**: Business logic only
-- **Controllers**: Request/response handling only
-- **Routes**: Route definitions only
-- **Middleware**: Cross-cutting concerns only
-
-### Clean Architecture Layers
-```
-Presentation → Controllers → Services → Repositories → Database
-```
-
-No layer depends on inner implementation details. Dependencies point inward.
-
-## Development Scripts
-
-### Backend
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run dev` - Run development server with ts-node
-- `npm start` - Run production server
-- `npm test` - Run unit tests with coverage
-
-### Frontend
-- `npm run build` - Compile TypeScript
-- `npm run dev` - Watch mode for development
-- `npm run serve` - Serve built files
-- `npm test` - Run unit tests with coverage
-
-## Database
-
-SQLite database file: `backend/database/auth.db`
-
-### Schema
-```sql
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## License
-
-MIT
-
-## Security
-
-⚠️ **Production Deployment Requirements**:
-
-Before deploying to production, you **MUST**:
-
-1. **Set JWT_SECRET environment variable**:
+Install hooks:
 ```bash
-# Generate a secure secret
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Windows
+powershell -ExecutionPolicy Bypass -File .\setup-hooks.ps1
 
-# Add to .env file
-JWT_SECRET=your-generated-secret-here
-NODE_ENV=production
-ALLOWED_ORIGINS=https://yourdomain.com
+# Linux/macOS
+./setup-hooks.sh
 ```
 
-2. **Enable HTTPS** (use reverse proxy or platform with SSL)
+Pre-commit checks:
+1. Build backend
+2. Build frontend
+3. Run backend tests
+4. Run frontend tests
 
-3. **Review security documentation**: See `SECURITY_AUDIT.md` (living audit document)
+Bypass (only when absolutely necessary):
+```bash
+git commit --no-verify
+```
 
-### Security Improvements Implemented
+## Environment Variables
 
-✅ Environment-based JWT secrets (no hardcoded values)  
-✅ Rate limiting (5 attempts per 15 minutes)  
-✅ CORS whitelist configuration  
-✅ Helmet.js security headers (CSP, HSTS)  
-✅ Reduced JWT lifetime (1 hour)  
-✅ Fixed username enumeration  
-✅ Request size limits  
-✅ **Account lockout mechanism (NEW)** — 5 failed attempts = 30-minute lock  
-✅ **Security event logging (NEW)** — Full audit trail with Winston  
-✅ **Enhanced password policy (NEW)** — Uppercase, lowercase, numbers, special chars  
-✅ **Password confirmation field (NEW)** — Prevents user typos  
-✅ **httpOnly cookies (NEW)** — XSS-resistant token storage  
+Backend expects:
+- `JWT_SECRET`
+- `NODE_ENV`
+- `ALLOWED_ORIGINS`
 
-### Recommended Additional Improvements
+For Google OAuth:
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
 
-- Token revocation mechanism
-- Security event alerting
-- Advanced rate limiting (per username vs per IP)
-- 2FA/MFA support
-- Session management
+## Security Notes
 
-Full audit report: **`SECURITY_AUDIT.md`** (Living document - updated regularly)
+- Passwords are hashed with bcrypt.
+- SQL queries are parameterized.
+- Helmet and CORS restrictions are configured.
+- The frontend currently stores the returned JWT in localStorage for bearer requests in dashboard flows. Keep CSP strict and consider full cookie-only auth for reducing XSS token exposure.
 
-## Development
-
-This application was created in collaboration with **GitHub Copilot AI** to demonstrate:
-- Clean code architecture principles
-- Comprehensive test-driven development
-- Security best practices
-- Modern TypeScript development
-
-The AI assistant helped with:
-- Architectural design following Single Responsibility Principle
-- Implementation of all backend and frontend components
-- Writing 65+ comprehensive unit tests
-- Security considerations and validation
-- Documentation and code organization
+Detailed and current risk tracking is in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 
 ## License
 

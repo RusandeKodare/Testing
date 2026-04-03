@@ -4,30 +4,61 @@
 
 echo "Installing Git hooks..."
 
-# Create the pre-push hook
-cat > .git/hooks/pre-push << 'EOF'
+# Create the pre-commit hook
+cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/sh
-# Pre-push hook to run tests before pushing to remote
-# This ensures that all tests pass before code is pushed to the repository
+# Pre-commit hook to validate build + tests before commit
 
-echo "Running pre-push tests..."
+echo "Running pre-commit checks..."
 echo "========================"
+
+# Build backend
+echo ""
+echo "Building backend..."
+cd backend || exit 1
+npm run build --silent
+BACKEND_BUILD_EXIT_CODE=$?
+
+if [ $BACKEND_BUILD_EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "[ERROR] Backend build failed!"
+  echo "Commit aborted. Please fix build errors before committing."
+  exit 1
+fi
+
+echo "[OK] Backend build passed"
+
+# Build frontend
+echo ""
+echo "Building frontend..."
+cd ../frontend || exit 1
+npm run build --silent
+FRONTEND_BUILD_EXIT_CODE=$?
+
+if [ $FRONTEND_BUILD_EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "[ERROR] Frontend build failed!"
+  echo "Commit aborted. Please fix build errors before committing."
+  exit 1
+fi
+
+echo "[OK] Frontend build passed"
 
 # Test backend
 echo ""
 echo "Testing backend..."
-cd backend || exit 1
+cd ../backend || exit 1
 npm test --silent
 BACKEND_EXIT_CODE=$?
 
 if [ $BACKEND_EXIT_CODE -ne 0 ]; then
   echo ""
-  echo "❌ Backend tests failed!"
-  echo "Push aborted. Please fix the failing tests before pushing."
+  echo "[ERROR] Backend tests failed!"
+  echo "Commit aborted. Please fix failing tests before committing."
   exit 1
 fi
 
-echo "✅ Backend tests passed"
+echo "[OK] Backend tests passed"
 
 # Test frontend
 echo ""
@@ -38,24 +69,24 @@ FRONTEND_EXIT_CODE=$?
 
 if [ $FRONTEND_EXIT_CODE -ne 0 ]; then
   echo ""
-  echo "❌ Frontend tests failed!"
-  echo "Push aborted. Please fix the failing tests before pushing."
+  echo "[ERROR] Frontend tests failed!"
+  echo "Commit aborted. Please fix failing tests before committing."
   exit 1
 fi
 
-echo "✅ Frontend tests passed"
+echo "[OK] Frontend tests passed"
 echo ""
 echo "========================"
-echo "✅ All tests passed! Proceeding with push..."
+echo "[OK] All pre-commit checks passed. Proceeding with commit..."
 echo ""
 
 exit 0
 EOF
 
 # Make the hook executable
-chmod +x .git/hooks/pre-push
+chmod +x .git/hooks/pre-commit
 
-echo "✅ Git hooks installed successfully!"
+echo "[OK] Git hooks installed successfully!"
 echo ""
-echo "The pre-push hook will now run all tests before each push."
-echo "To bypass the hook temporarily, use: git push --no-verify"
+echo "The pre-commit hook will now build and test backend + frontend before each commit."
+echo "To bypass the hook temporarily, use: git commit --no-verify"
