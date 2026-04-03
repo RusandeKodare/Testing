@@ -11,6 +11,21 @@ body {
     line-height: 1.6;
 }
 
+.backend-status-banner {
+    display: none;
+    width: 100%;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 14px;
+    background: rgba(255, 71, 87, 0.15);
+    border-bottom: 1px solid rgba(255, 71, 87, 0.35);
+    color: #ff9ca5;
+}
+
+.backend-status-banner.show {
+    display: block;
+}
+
 /* AUTH PAGE STYLES */
 .container {
     width: 100%;

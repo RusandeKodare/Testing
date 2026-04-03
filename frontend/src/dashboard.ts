@@ -1,8 +1,12 @@
+import { reportBackendHealth } from './utils/backendHealth.js';
+
 export class Dashboard {
   private username: string | null = null;
   private userId: string | null = null;
 
   initialize(): void {
+    void reportBackendHealth('backend-status-dashboard');
+
     this.username = localStorage.getItem('username');
     this.userId = localStorage.getItem('userId');
 

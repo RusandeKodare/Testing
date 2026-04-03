@@ -1,5 +1,6 @@
 import { AuthApiService } from './services/AuthApiService.js';
 import { LoginForm } from './components/LoginForm.js';
+import { reportBackendHealth } from './utils/backendHealth.js';
 
 // Global error handler for unimplemented features
 window.addEventListener('error', (event) => {
@@ -61,6 +62,8 @@ function showNotImplementedPopup(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  void reportBackendHealth('backend-status');
+
   try {
     const authService = new AuthApiService();
     const loginForm = new LoginForm(authService);

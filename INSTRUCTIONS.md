@@ -182,6 +182,18 @@ git commit -m "Your single-sentence message here"
 
 ---
 
+### 5. Documentation and Test Sync 📚
+**ALWAYS** keep documentation and tests aligned with code changes:
+
+- ✅ Update relevant markdown files when behavior, APIs, setup steps, security posture, or workflows change (`README.md`, `QUICK_START.md`, roadmap/audit docs, etc.)
+- ✅ Add or update tests for every new behavior and for bug fixes that could regress
+- ✅ Ensure documentation examples and commands match the current implementation
+- ❌ NEVER leave docs in a stale state after modifying production code
+
+If code changes and docs/tests are not updated together, the work is incomplete.
+
+---
+
 ## Code Quality Standards
 
 ### TypeScript Standards
