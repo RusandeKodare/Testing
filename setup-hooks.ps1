@@ -171,4 +171,6 @@ Write-Host "[OK] Git hooks installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "The pre-commit hook will now build, type-check, and audit backend + frontend before each commit."
 Write-Host "The pre-push hook will now run backend + frontend tests before each push."
-Write-Host "To bypass the hook temporarily, use: git commit --no-verify"
+Write-Host "To bypass hooks temporarily (troubleshooting only):"
+Write-Host "  - Skip pre-commit: git commit --no-verify"
+Write-Host "  - Skip pre-push:  git push --no-verify"

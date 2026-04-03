@@ -155,6 +155,10 @@ The pre-push hook runs all required test checks automatically:
 
 Tests run at pre-push and in CI workflows.
 
+If you must bypass hooks temporarily for troubleshooting or exceptional cases, use:
+- Skip pre-commit: `git commit --no-verify`
+- Skip pre-push: `git push --no-verify`
+
 Manual fallback (only if hooks are unavailable or for troubleshooting):
 
 ```bash
