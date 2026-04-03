@@ -14,12 +14,21 @@ describe('UserRepository', () => {
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
+        password_hash TEXT,
         profile_picture TEXT DEFAULT NULL,
+        email TEXT DEFAULT NULL,
+        oauth_provider TEXT DEFAULT NULL,
+        oauth_id TEXT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         login_attempts INTEGER DEFAULT 0,
         locked_until DATETIME DEFAULT NULL
       )
+    `);
+
+    db.run(`
+      CREATE UNIQUE INDEX idx_oauth_user
+      ON users(oauth_provider, oauth_id)
+      WHERE oauth_provider IS NOT NULL AND oauth_id IS NOT NULL
     `);
 
     userRepository = new UserRepository(db, undefined);
@@ -202,6 +211,67 @@ describe('UserRepository', () => {
     it('should return null for non-existent user', () => {
       const retrievedPicture = userRepository.getProfilePicture(9999);
       expect(retrievedPicture).toBeNull();
+    });
+  });
+
+  describe('findByOAuth', () => {
+    it('should return user when OAuth provider and id exist', () => {
+      userRepository.createOAuthUser({
+        username: 'google_user',
+        email: 'google@example.com',
+        oauthProvider: 'google',
+        oauthId: 'google-123',
+        profilePicture: 'data:image/png;base64,oauthpic'
+      });
+
+      const user = userRepository.findByOAuth('google', 'google-123');
+
+      expect(user).not.toBeNull();
+      expect(user?.username).toBe('google_user');
+      expect(user?.email).toBe('google@example.com');
+      expect(user?.oauthProvider).toBe('google');
+      expect(user?.oauthId).toBe('google-123');
+      expect(user?.passwordHash).toBeNull();
+    });
+
+    it('should return null when OAuth user does not exist', () => {
+      const user = userRepository.findByOAuth('google', 'missing-user');
+      expect(user).toBeNull();
+    });
+  });
+
+  describe('createOAuthUser', () => {
+    it('should create and return OAuth user', () => {
+      const user = userRepository.createOAuthUser({
+        username: 'oauth_new',
+        email: 'oauth_new@example.com',
+        oauthProvider: 'google',
+        oauthId: 'google-456',
+        profilePicture: null
+      });
+
+      expect(user.id).toBeDefined();
+      expect(user.username).toBe('oauth_new');
+      expect(user.email).toBe('oauth_new@example.com');
+      expect(user.oauthProvider).toBe('google');
+      expect(user.oauthId).toBe('google-456');
+      expect(user.passwordHash).toBeNull();
+    });
+
+    it('should throw if OAuth user cannot be read after insert', () => {
+      const execSpy = jest.spyOn(db, 'exec').mockReturnValueOnce([] as any);
+
+      expect(() => {
+        userRepository.createOAuthUser({
+          username: 'oauth_fail',
+          email: 'oauth_fail@example.com',
+          oauthProvider: 'google',
+          oauthId: 'google-789',
+          profilePicture: null
+        });
+      }).toThrow('Failed to create OAuth user');
+
+      execSpy.mockRestore();
     });
   });
 });

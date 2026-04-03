@@ -86,6 +86,41 @@ describe('AuthService', () => {
       const hashedPassword = mockUserRepository.createUser.mock.calls[0][1];
       expect(hashedPassword).not.toBe('password123');
     });
+
+    it('should fall back to credentials username when repository returns null username', async () => {
+      mockUserRepository.userExists.mockReturnValue(false);
+      mockUserRepository.createUser.mockReturnValue({
+        id: 1,
+        username: null,
+        passwordHash: 'hashedpassword',
+        createdAt: new Date()
+      });
+
+      const result = await authService.register({
+        username: 'fallback-user',
+        password: 'password123',
+        confirmPassword: 'password123'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual({ id: 1, username: 'fallback-user' });
+    });
+
+    it('should handle non-Error values in registration catch block', async () => {
+      mockUserRepository.userExists.mockReturnValue(false);
+      mockUserRepository.createUser.mockImplementation(() => {
+        throw 'string-failure';
+      });
+
+      const result = await authService.register({
+        username: 'testuser',
+        password: 'password123',
+        confirmPassword: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Registration failed. Please try again.');
+    });
   });
 
   describe('login', () => {
@@ -124,6 +159,29 @@ describe('AuthService', () => {
       expect(result.token).toBeUndefined();
     });
 
+    it('should reject password login for OAuth-only accounts', async () => {
+      mockUserRepository.findByUsername.mockReturnValue({
+        id: 1,
+        username: 'oauth-user',
+        passwordHash: null,
+        email: 'oauth@example.com',
+        oauthProvider: 'google',
+        oauthId: 'google-1',
+        createdAt: new Date()
+      });
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'oauth-user',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid credentials');
+      expect(mockUserRepository.incrementLoginAttempts).not.toHaveBeenCalled();
+      expect(mockUserRepository.lockAccount).not.toHaveBeenCalled();
+    });
+
     it('should fail when password is incorrect', async () => {
       const bcrypt = require('bcryptjs');
       const hashedPassword = await bcrypt.hash('correctpassword', 10);
@@ -142,6 +200,70 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toBe('Invalid credentials');
+      expect(result.token).toBeUndefined();
+    });
+
+    it('should fall back to email when username is null while generating token', async () => {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('password123', 10);
+
+      mockUserRepository.findByUsername.mockReturnValue({
+        id: 2,
+        username: null,
+        email: 'oauth@example.com',
+        passwordHash: hashedPassword,
+        createdAt: new Date()
+      });
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'oauth@example.com',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual({ id: 2, username: 'oauth@example.com' });
+      expect(result.token).toBeDefined();
+    });
+
+    it('should handle failed login when updated user is null after increment', async () => {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('correctpassword', 10);
+
+      mockUserRepository.findByUsername
+        .mockReturnValueOnce({
+          id: 1,
+          username: 'testuser',
+          passwordHash: hashedPassword,
+          createdAt: new Date(),
+          loginAttempts: 1
+        })
+        .mockReturnValueOnce(null);
+      mockUserRepository.isAccountLocked.mockReturnValue(false);
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'wrongpassword'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid credentials');
+      expect(mockUserRepository.incrementLoginAttempts).toHaveBeenCalledWith('testuser');
+      expect(mockUserRepository.lockAccount).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-Error values in login catch block', async () => {
+      mockUserRepository.findByUsername.mockImplementation(() => {
+        throw 'string-failure';
+      });
+
+      const result = await authService.login({
+        username: 'testuser',
+        password: 'password123'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Login failed. Please try again.');
       expect(result.token).toBeUndefined();
     });
   });
