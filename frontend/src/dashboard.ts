@@ -1,5 +1,6 @@
 import { reportBackendHealth } from './utils/backendHealth.js';
 import { getCsrfTokenFromCookie, initializeCsrfToken } from './utils/csrf.js';
+import { setupProfileMenuBehavior } from './utils/profileMenu.js';
 
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
@@ -96,11 +97,6 @@ export class Dashboard {
       btn.addEventListener('click', () => this.logout());
     });
 
-    const actionButtons = document.querySelectorAll('.action-btn-large');
-    actionButtons.forEach(btn => {
-      btn.addEventListener('click', () => this.showNotImplemented());
-    });
-
     const changeAvatarBtn = document.getElementById('change-avatar-btn');
     const avatarInput = document.getElementById('avatar-input') as HTMLInputElement;
 
@@ -115,8 +111,39 @@ export class Dashboard {
     }
 
     this.setupProfileSettingsHandlers();
+    this.setupSettingsTabs();
+    this.setupProfileMenuBehavior();
     void this.loadProfilePicture();
     void this.loadProfileSettings();
+  }
+
+  private setupProfileMenuBehavior(): void {
+    setupProfileMenuBehavior('.profile-menu');
+  }
+
+  private setupSettingsTabs(): void {
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.settings-tab-btn');
+    const panels = document.querySelectorAll<HTMLElement>('.settings-panel');
+
+    if (!tabs.length || !panels.length) {
+      return;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-settings-tab');
+        if (!target) {
+          return;
+        }
+
+        tabs.forEach((entry) => entry.classList.remove('active'));
+        panels.forEach((panel) => panel.classList.remove('active'));
+
+        tab.classList.add('active');
+        const panel = document.getElementById(`settings-panel-${target}`);
+        panel?.classList.add('active');
+      });
+    });
   }
 
   private async handleProfilePictureChange(e: Event): Promise<void> {
@@ -381,10 +408,6 @@ export class Dashboard {
     } catch {
       console.error('Failed to load profile picture.');
     }
-  }
-
-  private showNotImplemented(): void {
-    this.showProfileUploadFeedback('This feature is not implemented yet.', false);
   }
 
   private async logout(): Promise<void> {

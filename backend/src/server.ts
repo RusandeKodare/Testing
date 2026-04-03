@@ -11,11 +11,14 @@ import { OAuthService } from './services/OAuthService';
 import { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createProfileRoutes } from './routes/profileRoutes';
+import { createDiaryRoutes } from './routes/diaryRoutes';
 import { createOAuthRoutes } from './routes/oauthRoutes';
 import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
+import { DiaryRepository } from './repositories/DiaryRepository';
+import { getOAuthConfigLogDecision } from './utils/oauthConfigStatus';
 
 dotenv.config();
 
@@ -84,6 +87,15 @@ const authLimiter = rateLimit({
   keyGenerator: resolveClientKey,
 });
 
+const csrfLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: 'Too many CSRF token requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: resolveClientKey,
+});
+
 const profileLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -97,6 +109,15 @@ const oauthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   message: 'Too many OAuth requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: resolveClientKey,
+});
+
+const diaryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: 'Too many diary requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolveClientKey,
@@ -116,6 +137,7 @@ async function startServer() {
   await dbConfig.initialize();
 
   const userRepository = new UserRepository(dbConfig.getDatabase(), dbConfig);
+  const diaryRepository = new DiaryRepository(dbConfig.getDatabase(), dbConfig);
   
   if (!JWT_SECRET || JWT_SECRET.length < 32) {
     logger.error('JWT_SECRET is not set or too short. Application cannot start.');
@@ -139,13 +161,29 @@ async function startServer() {
       googleRedirectUri
     );
     app.use('/api/oauth', oauthLimiter, createOAuthRoutes(oauthService, JWT_SECRET));
-    logger.info('OAuth service initialized');
   } else {
-    logger.warn('Google OAuth credentials not configured - OAuth login disabled');
+    const oauthLogDecision = getOAuthConfigLogDecision(
+      process.env.NODE_ENV,
+      Boolean(googleClientId),
+      Boolean(googleClientSecret)
+    );
+    logger[oauthLogDecision.level](oauthLogDecision.message);
   }
 
-  app.use('/api/auth', authLimiter, createAuthRoutes(authController));
+  app.use('/api/auth/csrf', csrfLimiter);
+  app.use(
+    '/api/auth',
+    (req, res, next) => {
+      if (req.method === 'GET' && req.path === '/csrf') {
+        return next();
+      }
+
+      return authLimiter(req, res, next);
+    },
+    createAuthRoutes(authController)
+  );
   app.use('/api/profile', profileLimiter, createProfileRoutes(userRepository, JWT_SECRET));
+  app.use('/api/diary', diaryLimiter, createDiaryRoutes(diaryRepository, JWT_SECRET));
   app.use('/api/health', createHealthRoutes());
   
   app.use(errorHandler);

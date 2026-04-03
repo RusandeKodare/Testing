@@ -1,8 +1,6 @@
 name: Security Scans
 
 on:
-  push:
-    branches: [ Dev, master ]
   # Keep pull_request (not pull_request_target) to avoid elevated context on untrusted PRs.
   pull_request:
     branches: [ master ]

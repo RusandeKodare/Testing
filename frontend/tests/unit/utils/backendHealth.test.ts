@@ -52,6 +52,18 @@ describe('backendHealth', () => {
       expect(result.isAvailable).toBe(false);
       expect(result.message).toContain('Backend is unreachable');
     });
+
+    it('returns unavailable when payload status is not ok', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'degraded' })
+      });
+
+      const result = await checkBackendHealth();
+
+      expect(result.isAvailable).toBe(false);
+      expect(result.message).toContain('unexpected payload');
+    });
   });
 
   describe('updateBackendStatusBanner', () => {
@@ -80,6 +92,15 @@ describe('backendHealth', () => {
       expect(banner.className).toBe('backend-status-banner');
       expect(banner.textContent).toBe('');
     });
+
+    it('does nothing when target banner element does not exist', () => {
+      document.body.innerHTML = '<div id="different-banner"></div>';
+
+      expect(() => updateBackendStatusBanner('backend-status', {
+        isAvailable: false,
+        message: 'Backend is unreachable'
+      })).not.toThrow();
+    });
   });
 
   describe('reportBackendHealth', () => {
@@ -99,6 +120,24 @@ describe('backendHealth', () => {
       expect(banner.className).toContain('show');
 
       errorSpy.mockRestore();
+    });
+
+    it('logs info and clears banner when backend is healthy', async () => {
+      document.body.innerHTML = '<div id="backend-status" class="backend-status-banner show">X</div>';
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'ok' })
+      });
+      const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+
+      await reportBackendHealth('backend-status');
+
+      expect(infoSpy).toHaveBeenCalledWith('Backend connectivity check passed');
+      const banner = document.getElementById('backend-status') as HTMLDivElement;
+      expect(banner.className).toBe('backend-status-banner');
+      expect(banner.textContent).toBe('');
+
+      infoSpy.mockRestore();
     });
   });
 });

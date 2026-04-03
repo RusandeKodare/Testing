@@ -145,10 +145,19 @@ The pre-commit hook runs all required checks automatically:
 2. Frontend build (`npm run build`)
 3. Backend TypeScript check (`npx tsc --noEmit`)
 4. Frontend TypeScript check (`npx tsc --noEmit`)
-5. Backend tests (`npm test`)
-6. Frontend tests (`npm test`)
-7. Backend dependency audit (`npm audit --audit-level=high`)
-8. Frontend dependency audit (`npm audit --audit-level=high`)
+5. Backend dependency audit (`npm audit --audit-level=high`)
+6. Frontend dependency audit (`npm audit --audit-level=high`)
+
+The pre-push hook runs all required test checks automatically:
+
+1. Backend tests (`npm test`)
+2. Frontend tests (`npm test`)
+
+Tests run at pre-push and in CI workflows.
+
+If you must bypass hooks temporarily for troubleshooting or exceptional cases, use:
+- Skip pre-commit: `git commit --no-verify`
+- Skip pre-push: `git push --no-verify`
 
 Manual fallback (only if hooks are unavailable or for troubleshooting):
 
@@ -185,6 +194,8 @@ git commit -m "Your single-sentence message here"
 ### 5. Documentation and Test Sync 📚
 **ALWAYS** keep documentation and tests aligned with code changes:
 
+- ✅ Read all markdown files in the repository before starting implementation work
+- ✅ Update all markdown files if necessary before finishing work
 - ✅ Update relevant markdown files when behavior, APIs, setup steps, security posture, or workflows change (`README.md`, `QUICK_START.md`, roadmap/audit docs, etc.)
 - ✅ Add or update tests for every new behavior and for bug fixes that could regress
 - ✅ Ensure documentation examples and commands match the current implementation

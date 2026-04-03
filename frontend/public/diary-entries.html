@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diary Entries - Secure Login System</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="backend-status-dashboard" class="backend-status-banner" role="status" aria-live="polite"></div>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a class="navbar-logo" href="/dashboard.html" aria-label="Go to dashboard">🔐 SecureAuth</a>
+            <div class="navbar-right">
+                <div class="profile-nav">
+                    <img id="profile-avatar-nav" class="profile-avatar-nav" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
+                    <span id="username-nav">User</span>
+                </div>
+                <details class="profile-menu" aria-label="Profile menu">
+                    <summary class="profile-menu-trigger">Menu</summary>
+                    <div class="profile-menu-content">
+                        <a class="profile-menu-link" href="/dashboard.html">Dashboard</a>
+                        <a class="profile-menu-link" href="/settings.html">Settings</a>
+                        <a class="profile-menu-link" href="/diary.html">Write Entry</a>
+                        <button id="logout-btn" type="button" class="profile-menu-link profile-menu-button">Logout</button>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </nav>
+
+    <section class="section-container diary-shell">
+        <div class="diary-page-head">
+            <h1>All Diary Entries</h1>
+            <p>Browse, filter, edit, and manage your complete journal history.</p>
+        </div>
+
+        <section class="settings-card diary-feed">
+            <div class="diary-feed-head">
+                <h3>Entries</h3>
+                <a href="/diary.html" class="settings-btn settings-btn-secondary diary-link-btn">Back to Composer</a>
+            </div>
+            <div class="diary-filters">
+                <input id="diary-search" class="diary-filter" type="text" placeholder="Search title or content">
+                <select id="diary-filter-mood" class="diary-filter">
+                    <option value="">All moods</option>
+                    <option value="great">Great</option>
+                    <option value="good">Good</option>
+                    <option value="okay">Okay</option>
+                    <option value="bad">Bad</option>
+                    <option value="awful">Awful</option>
+                </select>
+                <input id="diary-filter-tag" class="diary-filter" type="text" placeholder="Tag filter">
+                <label class="diary-checkbox-row" for="diary-filter-favorite">
+                    <input id="diary-filter-favorite" class="diary-filter" type="checkbox">
+                    Favorites only
+                </label>
+            </div>
+
+            <div id="diary-entries-message" class="settings-message" role="status" aria-live="polite"></div>
+
+            <div id="diary-entries-list" class="diary-entries-list">
+                <p class="diary-empty">No diary entries found yet.</p>
+            </div>
+        </section>
+    </section>
+
+    <script type="module" src="dist/diary-entries.js"></script>
+</body>
+</html>

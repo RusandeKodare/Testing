@@ -10,6 +10,11 @@ const buildDashboardDom = (): void => {
     <span id="username-hero"></span>
     <span id="username-nav"></span>
     <span id="login-time"></span>
+    <details class="profile-menu" open>
+      <summary class="profile-menu-trigger">Menu</summary>
+      <div class="profile-menu-content"><button id="profile-menu-inside" type="button">Inside</button></div>
+    </details>
+    <div id="outside-target">Outside</div>
     <button id="logout-btn"></button>
     <button class="logout-btn-nav"></button>
     <button class="action-btn-large"></button>
@@ -114,5 +119,25 @@ describe('Dashboard email settings', () => {
     expect(currentEmail.textContent).toBe('updated@example.com');
     expect(editContainer.classList.contains('is-hidden')).toBe(true);
     expect(editButton.classList.contains('is-hidden')).toBe(false);
+  });
+});
+
+describe('Dashboard profile menu behavior', () => {
+  beforeEach(() => {
+    buildDashboardDom();
+    jest.clearAllMocks();
+  });
+
+  it('closes the menu when clicking outside', () => {
+    const dashboard = new Dashboard();
+    (dashboard as any).setupProfileMenuBehavior();
+
+    const menu = document.querySelector('.profile-menu') as HTMLDetailsElement;
+    expect(menu.open).toBe(true);
+
+    const outside = document.getElementById('outside-target') as HTMLElement;
+    outside.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(menu.open).toBe(false);
   });
 });

@@ -11,85 +11,52 @@
     <div id="backend-status-dashboard" class="backend-status-banner" role="status" aria-live="polite"></div>
     <nav class="navbar">
         <div class="navbar-container">
-            <div class="navbar-logo">🔐 SecureAuth Dashboard</div>
+            <a class="navbar-logo" href="/dashboard.html" aria-label="Go to dashboard">🔐 SecureAuth</a>
             <div class="navbar-right">
                 <div class="profile-nav">
                     <img id="profile-avatar-nav" class="profile-avatar-nav" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
                     <span id="username-nav">User</span>
                 </div>
-                <button id="logout-btn" class="logout-btn-nav">Logout</button>
+                <details class="profile-menu" aria-label="Profile menu">
+                    <summary class="profile-menu-trigger">Menu</summary>
+                    <div class="profile-menu-content">
+                        <a class="profile-menu-link" href="/settings.html">Settings</a>
+                           <a class="profile-menu-link" href="/diary.html" id="diary-link">My Diary</a>
+                        <button id="logout-btn" type="button" class="profile-menu-link profile-menu-button">Logout</button>
+                    </div>
+                </details>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="profile-section-hero">
-                <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
-                <button id="change-avatar-btn" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
-                <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
-            </div>
-            <h1>Welcome, <span id="username-hero">User</span>! 👋</h1>
-            <p>You're now securely authenticated and ready to explore your dashboard</p>
-            <div class="hero-stats">
-                <div class="stat"><span>✅</span> Account Verified</div>
-                <div class="stat"><span>🔒</span> Fully Secured</div>
-                <div class="stat"><span>⚡</span> Active Session</div>
-            </div>
-            <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
-        </div>
-    </section>
-
     <section class="section-container">
-        <h2>Profile Settings</h2>
-        <div class="settings-grid">
-            <div class="settings-card">
-                <h3>Contact Email</h3>
-                <p class="settings-description">Add or update your email address for account notifications.</p>
-                <form id="email-settings-form" class="settings-form" method="post" action="#">
-                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
-                    <div class="email-current-row">
-                        <p class="email-current-text">Current email: <span id="current-email-value">Not set</span></p>
-                        <button type="button" id="edit-email-btn" class="settings-btn settings-btn-secondary">Edit</button>
-                    </div>
+        <div class="dashboard-top-card">
+            <div class="profile-section-hero dashboard-avatar-wrap">
+                    <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
+                    <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Change profile picture" aria-label="Change profile picture">
+                        <svg class="camera-glyph" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M9 5.5 10.2 4h3.6L15 5.5h2.6c1.2 0 2.2 1 2.2 2.2v8.8c0 1.2-1 2.2-2.2 2.2H6.4c-1.2 0-2.2-1-2.2-2.2V7.7c0-1.2 1-2.2 2.2-2.2H9Zm3 2.3a4.6 4.6 0 1 0 0 9.2 4.6 4.6 0 0 0 0-9.2Zm0 1.8a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z" />
+                        </svg>
+                    </button>
+                    <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
+                </div>
+                <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
 
-                    <div id="email-edit-container" class="email-edit-container is-hidden">
-                        <label for="settings-email-input">New Email Address</label>
-                        <input id="settings-email-input" type="email" autocomplete="email" placeholder="you@example.com" required>
-                        <div class="email-edit-actions">
-                            <button id="save-email-btn" type="submit" class="settings-btn">Save Email</button>
-                            <button id="cancel-email-btn" type="button" class="settings-btn settings-btn-secondary">Cancel</button>
-                        </div>
-                    </div>
-
-                    <div id="email-settings-message" class="settings-message" role="status" aria-live="polite"></div>
-                </form>
-            </div>
-
-            <div class="settings-card">
-                <h3>Change Password</h3>
-                <p class="settings-description">Update your password using a strong combination of characters.</p>
-                <form id="password-settings-form" class="settings-form" method="post" action="#">
-                    <input type="hidden" name="csrf_token" value="__CSRF_TOKEN__">
-                    <label for="settings-current-password">Current Password</label>
-                    <input id="settings-current-password" type="password" autocomplete="current-password" placeholder="Current password">
-
-                    <label for="settings-new-password">New Password</label>
-                    <input id="settings-new-password" type="password" autocomplete="new-password" placeholder="New secure password" required>
-
-                    <label for="settings-confirm-password">Confirm New Password</label>
-                    <input id="settings-confirm-password" type="password" autocomplete="new-password" placeholder="Repeat new password" required>
-
-                    <button type="submit" class="settings-btn">Update Password</button>
-                    <div id="password-settings-message" class="settings-message" role="status" aria-live="polite"></div>
-                </form>
+            <div class="dashboard-top-content">
+                <h1>Welcome, <span id="username-hero">User</span>! 👋</h1>
+                <p>You're now securely authenticated and ready to explore your dashboard</p>
+                <div class="hero-stats">
+                    <div class="stat"><span>✅</span> Account Verified</div>
+                    <div class="stat"><span>🔒</span> Fully Secured</div>
+                    <div class="stat"><span>⚡</span> Active Session</div>
+                </div>
+                <p class="settings-cta-note">Manage your profile picture, email, and password in the dedicated settings page.</p>
             </div>
         </div>
     </section>
 
     <!-- Session Info Section -->
-    <section class="section-bg">
+    <section class="section-bg dashboard-main-block">
         <div class="section-container">
             <h2>Session Information</h2>
             <div class="info-grid">
@@ -116,166 +83,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Features Section -->
-    <section class="section-container">
-        <h2>Key Features</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔐</div>
-                <h3>Enterprise Security</h3>
-                <p>Military-grade encryption for all your data and communications</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Lightning Fast</h3>
-                <p>Optimized performance with sub-100ms response times</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Mobile Ready</h3>
-                <p>Fully responsive design works seamlessly on all devices</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔄</div>
-                <h3>Auto Sync</h3>
-                <p>Real-time synchronization across all your devices</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Analytics</h3>
-                <p>Comprehensive dashboards and detailed analytics reports</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🤝</div>
-                <h3>24/7 Support</h3>
-                <p>Dedicated support team ready to help you anytime</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Quick Actions Section -->
-    <section class="section-bg">
-        <div class="section-container">
-            <h2>Quick Actions</h2>
-            <div class="actions-grid">
-                <button class="action-btn-large">👤 View Profile</button>
-                <button class="action-btn-large">⚙️ Settings</button>
-                <button class="action-btn-large">📧 Messages</button>
-                <button class="action-btn-large">📚 Documentation</button>
-                <button class="action-btn-large">💬 Support</button>
-                <button class="action-btn-large">🎓 Tutorials</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="section-container">
-        <h2>Your Statistics</h2>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">1,243</div>
-                <div class="stat-label">Total Sessions</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">47</div>
-                <div class="stat-label">Active Projects</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">98%</div>
-                <div class="stat-label">Uptime</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">2.3GB</div>
-                <div class="stat-label">Storage Used</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="section-bg">
-        <div class="section-container">
-            <h2>What Users Say</h2>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <p>"Best authentication system I've ever used. Highly secure and incredibly fast!"</p>
-                    <div class="testimonial-author">- Alex Johnson</div>
-                </div>
-                <div class="testimonial-card">
-                    <p>"Seamless integration with our existing systems. The support team was fantastic!"</p>
-                    <div class="testimonial-author">- Sarah Chen</div>
-                </div>
-                <div class="testimonial-card">
-                    <p>"Enterprise-grade security at a fraction of the cost. Couldn't ask for more."</p>
-                    <div class="testimonial-author">- Mike Rodriguez</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="section-container">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-grid">
-            <div class="faq-card">
-                <h3>❓ How secure is my data?</h3>
-                <p>Your data is protected with AES-256 encryption and stored in compliant data centers.</p>
-            </div>
-            <div class="faq-card">
-                <h3>🔄 Can I export my data?</h3>
-                <p>Yes! You can export all your data in multiple formats whenever you need it.</p>
-            </div>
-            <div class="faq-card">
-                <h3>📱 Is there an API?</h3>
-                <p>Absolutely! We provide a comprehensive REST API for developers.</p>
-            </div>
-            <div class="faq-card">
-                <h3>🌍 What regions are supported?</h3>
-                <p>We operate globally with servers in all major continents.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h4>Product</h4>
-                <ul>
-                    <li>Features</li>
-                    <li>Security</li>
-                    <li>Pricing</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Company</h4>
-                <ul>
-                    <li>About</li>
-                    <li>Blog</li>
-                    <li>Careers</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li>Privacy</li>
-                    <li>Terms</li>
-                    <li>Contact</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Connect</h4>
-                <ul>
-                    <li>Twitter</li>
-                    <li>LinkedIn</li>
-                    <li>GitHub</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 SecureAuth. All rights reserved.</p>
-        </div>
-    </footer>
 
     <script type="module" src="dist/dashboard.js"></script>
 </body>

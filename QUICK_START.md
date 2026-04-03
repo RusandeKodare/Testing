@@ -81,6 +81,7 @@ You should see the dark-themed login page!
 2. Enter the same credentials
 3. Click "Login"
 4. You should see "Login successful" ✅
+5. Open the profile menu in the top navigation and select "My Diary" to create your first saved entry
 
 ---
 
@@ -180,7 +181,7 @@ When both servers are running:
   - GET /api/oauth/google/callback
 
 - **Frontend UI**: http://localhost:3001
-  - Login/Register page + Dashboard
+  - Login/Register page + Dashboard + Settings + Diary
 
 ---
 
