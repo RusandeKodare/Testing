@@ -11,12 +11,14 @@ import { OAuthService } from './services/OAuthService';
 import { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createProfileRoutes } from './routes/profileRoutes';
+import { createDiaryRoutes } from './routes/diaryRoutes';
 import { createOAuthRoutes } from './routes/oauthRoutes';
 import { createHealthRoutes } from './routes/healthRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { createCsrfProtection } from './middleware/csrfMiddleware';
 import { getLogger } from './utils/logger';
 import { getOAuthConfigLogDecision } from './utils/oauthConfigStatus';
+import { DiaryRepository } from './repositories/DiaryRepository';
 
 dotenv.config();
 
@@ -103,6 +105,15 @@ const oauthLimiter = rateLimit({
   keyGenerator: resolveClientKey,
 });
 
+const diaryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: 'Too many diary requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: resolveClientKey,
+});
+
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' })); // Increased for profile picture uploads
 app.use('/api', createCsrfProtection([
@@ -117,6 +128,7 @@ async function startServer() {
   await dbConfig.initialize();
 
   const userRepository = new UserRepository(dbConfig.getDatabase(), dbConfig);
+  const diaryRepository = new DiaryRepository(dbConfig.getDatabase(), dbConfig);
   
   if (!JWT_SECRET || JWT_SECRET.length < 32) {
     logger.error('JWT_SECRET is not set or too short. Application cannot start.');
@@ -156,6 +168,7 @@ async function startServer() {
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
   app.use('/api/profile', profileLimiter, createProfileRoutes(userRepository, JWT_SECRET));
+  app.use('/api/diary', diaryLimiter, createDiaryRoutes(diaryRepository, JWT_SECRET));
   app.use('/api/health', createHealthRoutes());
   
   app.use(errorHandler);
