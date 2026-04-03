@@ -46,15 +46,13 @@
     <section class="section-container">
         <div class="dashboard-shell">
             <aside class="dashboard-sidebar">
-                <h3>Your Profile</h3>
+                <h3 id="profile-sidebar-name" class="profile-sidebar-name">User</h3>
                 <div class="profile-section-hero dashboard-avatar-wrap">
                     <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
                     <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
                     <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
                 </div>
                 <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
-                <p class="dashboard-sidebar-note">This profile image is shown in your account menu and settings.</p>
-                <a class="settings-btn" href="/settings.html">Manage Account Settings</a>
             </aside>
 
             <div>
@@ -87,14 +85,6 @@
                     </div>
                 </section>
             </div>
-        </div>
-    </section>
-
-    <section class="section-container">
-        <div class="settings-card">
-            <h3>Account Shortcuts</h3>
-            <p class="settings-description">Need to update your account details? Use settings to manage profile picture, email, and password.</p>
-            <a class="settings-btn" href="/settings.html">Go to Settings</a>
         </div>
     </section>
 

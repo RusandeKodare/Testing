@@ -540,15 +540,24 @@ input.error {
     margin-bottom: 14px;
 }
 
+.profile-sidebar-name {
+    margin-bottom: 18px;
+    text-align: center;
+    font-size: 28px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: transparent;
+    background: linear-gradient(90deg, #7de8ff 0%, #23beff 48%, #69ffd3 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: 0 0 24px rgba(0, 200, 255, 0.28);
+}
+
 .dashboard-avatar-wrap {
     width: 220px;
     height: 220px;
     margin: 0 auto 26px;
-}
-
-.dashboard-sidebar-note {
-    color: #a9bfd1;
-    margin-bottom: 16px;
 }
 
 .dashboard-main-block {

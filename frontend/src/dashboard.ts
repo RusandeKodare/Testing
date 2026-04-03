@@ -79,7 +79,7 @@ export class Dashboard {
   }
 
   private loadUserInfo(): void {
-    const usernameElements = document.querySelectorAll('#username, #username-detail, #username-hero, #username-nav');
+    const usernameElements = document.querySelectorAll('#username, #username-detail, #username-hero, #username-nav, #profile-sidebar-name');
     usernameElements.forEach(el => {
       if (el) el.textContent = this.username || 'User';
     });
