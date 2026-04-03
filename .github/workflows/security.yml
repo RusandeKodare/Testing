@@ -145,7 +145,7 @@ jobs:
       - name: Start backend API
         working-directory: ./backend
         run: |
-          export JWT_SECRET="$(node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")"
+          export JWT_SECRET="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")"
           export NODE_ENV=test
           nohup npm run dev > ../backend-zap.log 2>&1 &
 
