@@ -62,9 +62,10 @@ export class LoginForm {
           this.showMessage('login-message', 'Login successful! Redirecting...', 'success');
           form.reset();
           
-          if (result.token) {
+          if (result.token && result.user) {
             localStorage.setItem('authToken', result.token);
-            localStorage.setItem('username', username);
+            localStorage.setItem('username', result.user.username);
+            localStorage.setItem('userId', result.user.id?.toString() || '');
             
             setTimeout(() => {
               window.location.href = '/dashboard.html';
@@ -127,9 +128,10 @@ export class LoginForm {
           this.showMessage('register-message', 'Registration successful! Please login.', 'success');
           form.reset();
           
-          if (result.token) {
+          if (result.token && result.user) {
             localStorage.setItem('authToken', result.token);
-            localStorage.setItem('username', username);
+            localStorage.setItem('username', result.user.username);
+            localStorage.setItem('userId', result.user.id?.toString() || '');
           }
           
           setTimeout(() => {

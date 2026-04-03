@@ -1,12 +1,14 @@
 export class Dashboard {
   private token: string | null = null;
   private username: string | null = null;
+  private userId: string | null = null;
 
   initialize(): void {
     this.token = localStorage.getItem('authToken');
     this.username = localStorage.getItem('username');
+    this.userId = localStorage.getItem('userId');
 
-    if (!this.token || !this.username) {
+    if (!this.token || !this.username || !this.userId) {
       this.redirectToLogin();
       return;
     }
@@ -56,11 +58,11 @@ export class Dashboard {
       avatarInput.addEventListener('change', (e) => this.handleProfilePictureChange(e));
     }
 
-    // Load saved profile picture
+    // Load profile picture from database
     this.loadProfilePicture();
   }
 
-  private handleProfilePictureChange(e: Event): void {
+  private async handleProfilePictureChange(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     
@@ -78,28 +80,58 @@ export class Dashboard {
       return;
     }
 
-    // Convert to data URL and save
+    // Convert to data URL
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      localStorage.setItem('profilePicture', dataUrl);
       
-      // Update all avatar images
-      const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
-      avatarImages.forEach(img => {
-        img.src = dataUrl;
-      });
+      // Upload to backend
+      try {
+        const response = await fetch('http://localhost:3000/api/profile/picture', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: this.userId,
+            profilePicture: dataUrl,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update all avatar images immediately
+          const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
+          avatarImages.forEach(img => {
+            img.src = dataUrl;
+          });
+          alert('Profile picture updated successfully!');
+        } else {
+          alert('Failed to update profile picture: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        alert('Failed to upload profile picture. Please try again.');
+      }
     };
     reader.readAsDataURL(file);
   }
 
-  private loadProfilePicture(): void {
-    const savedPicture = localStorage.getItem('profilePicture');
-    if (savedPicture) {
-      const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
-      avatarImages.forEach(img => {
-        img.src = savedPicture;
-      });
+  private async loadProfilePicture(): Promise<void> {
+    try {
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${this.userId}`);
+      const result = await response.json();
+
+      if (result.success && result.profilePicture) {
+        const avatarImages = document.querySelectorAll('#profile-avatar, #profile-avatar-nav') as NodeListOf<HTMLImageElement>;
+        avatarImages.forEach(img => {
+          img.src = result.profilePicture;
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile picture:', error);
+      // Silently fail - user may not have a profile picture yet
     }
   }
 
@@ -110,6 +142,7 @@ export class Dashboard {
   private logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
+    localStorage.removeItem('userId');
     this.redirectToLogin();
   }
 
