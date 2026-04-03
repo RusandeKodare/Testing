@@ -32,6 +32,27 @@ This document provides guidelines for AI assistants working on the TestProject c
 ### 2. Test-Driven Development 🧪
 **ALWAYS** write tests for new features and code changes:
 
+#### ⚠️ CRITICAL: NEVER MODIFY TESTS TO FIT YOUR CODE
+**Tests are the source of truth. If your code fails a test, fix the CODE, not the test.**
+
+- ✅ **DO**: Adjust your implementation to pass existing tests
+- ✅ **DO**: Add NEW tests for new functionality
+- ❌ **NEVER**: Modify existing tests to make your code pass
+- ❌ **NEVER**: Comment out or delete failing tests
+
+**ONLY modify tests when:**
+- The functionality itself has fundamentally changed (with explicit approval)
+- The test has a bug (verify with team first)
+- Refactoring test structure for clarity (behavior must remain unchanged)
+
+**If a test fails:**
+1. ❌ **DO NOT** change the test
+2. ✅ **DO** understand WHY the test is failing
+3. ✅ **DO** fix your code to meet the test's expectations
+4. ✅ **DO** ensure your changes don't break other tests
+
+**Think of tests as the contract.** Your code must fulfill the contract, not the other way around.
+
 #### When Adding New Features:
 1. Write tests FIRST (TDD approach preferred)
 2. Implement the feature
