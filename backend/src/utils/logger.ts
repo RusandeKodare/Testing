@@ -25,9 +25,12 @@ const getTransport = () => {
 };
 
 // Root logger configuration with automatic redaction of sensitive data
+const resolvedLogLevel =
+  process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'silent' : 'info');
+
 const rootLogger = pino(
   {
-    level: process.env.LOG_LEVEL || 'info',
+    level: resolvedLogLevel,
     base: {
       env: process.env.NODE_ENV || 'development',
       service: 'auth-service'
