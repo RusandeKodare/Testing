@@ -2,7 +2,7 @@ name: Security Scans
 
 on:
   push:
-    branches: [ master ]
+    branches: [ Dev ]
   # Keep pull_request (not pull_request_target) to avoid elevated context on untrusted PRs.
   pull_request:
     branches: [ master ]
@@ -111,7 +111,7 @@ jobs:
           /usr/local/bin/gitleaks version
 
       - name: Run Gitleaks (full history)
-        run: /usr/local/bin/gitleaks detect --source=. --redact --verbose --log-opts="--all"
+        run: /usr/local/bin/gitleaks detect --config=.gitleaks.toml --source=. --redact --verbose --log-opts="--all"
 
   zap-baseline:
     name: OWASP ZAP Baseline

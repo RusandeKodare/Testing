@@ -1,0 +1,14 @@
+title = "TestProject Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow JWT placeholder in .env.example"
+paths = [
+  '''^\.env\.example$''',
+]
+regexTarget = "line"
+regexes = [
+  '''^JWT_SECRET=generate_a_unique_64_char_secret_for_each_environment$''',
+]
