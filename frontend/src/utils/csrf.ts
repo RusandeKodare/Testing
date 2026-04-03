@@ -1,13 +1,25 @@
 const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 export async function initializeCsrfToken(): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
-    method: 'GET',
-    credentials: 'include'
-  });
+  if (getCsrfTokenFromCookie()) {
+    return;
+  }
 
-  if (!response.ok) {
-    throw new Error(`CSRF initialization failed with status ${response.status}`);
+  let lastStatus: number | null = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      return;
+    }
+
+    lastStatus = response.status;
+    if (attempt === 1) {
+      throw new Error(`CSRF initialization failed with status ${lastStatus}`);
+    }
   }
 }
 

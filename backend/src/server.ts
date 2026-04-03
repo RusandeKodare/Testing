@@ -85,6 +85,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolveClientKey,
+  skip: (req) => req.method === 'GET' && req.path === '/csrf'
 });
 
 const profileLimiter = rateLimit({
