@@ -1,6 +1,6 @@
 # TestProject - Auth, OAuth, and Profile Persistence
 
-Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard flows, Google OAuth support, persistent profile pictures, and profile settings (email + password updates).
+Full-stack TypeScript authentication project with layered backend architecture, frontend login/dashboard/settings flows, Google OAuth support, persistent profile pictures, and profile settings (email + password updates).
 
 ## Security Status
 
@@ -20,7 +20,7 @@ Current snapshot (April 3, 2026):
 - httpOnly auth cookie support
 - Account lockout after repeated failed logins
 - Profile picture persistence in database (not browser-only)
-- Profile settings menu for updating account email and password
+- Dedicated settings page (via profile menu) for updating account email and password
 - Structured security logging with redaction
 - Unit tests and coverage gates in backend and frontend
 
@@ -131,9 +131,9 @@ npm test
 ```
 
 Current counts:
-- Backend: 107 tests
-- Frontend: 33 tests
-- Total: 140 tests
+- Backend: 126 tests
+- Frontend: 35 tests
+- Total: 161 tests
 
 ## API Overview
 
@@ -173,10 +173,10 @@ Pre-commit checks:
 2. Build frontend
 3. Type-check backend (`npx tsc --noEmit`)
 4. Type-check frontend (`npx tsc --noEmit`)
-5. Run backend tests
-6. Run frontend tests
-7. Audit backend dependencies (`npm audit --audit-level=high`)
-8. Audit frontend dependencies (`npm audit --audit-level=high`)
+5. Audit backend dependencies (`npm audit --audit-level=high`)
+6. Audit frontend dependencies (`npm audit --audit-level=high`)
+
+Tests run in CI workflows instead of at commit-time.
 
 Automated CI security checks in GitHub Actions:
 1. CodeQL static analysis (JavaScript/TypeScript)
