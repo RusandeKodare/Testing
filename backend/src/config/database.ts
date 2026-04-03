@@ -18,7 +18,12 @@ export class DatabaseConfig {
       this.db = new SQL.Database(buffer);
     } else {
       this.db = new SQL.Database();
-      this.createTables();
+    }
+
+    this.createTables();
+    const migrated = this.migrateSchema();
+    this.ensureIndexes();
+    if (migrated || !fs.existsSync(this.dbPath)) {
       this.save();
     }
   }
@@ -43,12 +48,52 @@ export class DatabaseConfig {
       )
     `);
     
-    // Create unique index for OAuth users
+  }
+
+  private ensureIndexes(): void {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
     this.db.run(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_user 
       ON users(oauth_provider, oauth_id) 
       WHERE oauth_provider IS NOT NULL AND oauth_id IS NOT NULL
     `);
+  }
+
+  private migrateSchema(): boolean {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const result = this.db.exec('PRAGMA table_info(users)');
+    if (result.length === 0 || result[0].values.length === 0) {
+      return false;
+    }
+
+    const existingColumns = new Set(
+      result[0].values.map((row) => String(row[1]))
+    );
+
+    const requiredColumns: Array<{ name: string; sql: string }> = [
+      { name: 'profile_picture', sql: 'ALTER TABLE users ADD COLUMN profile_picture TEXT DEFAULT NULL' },
+      { name: 'email', sql: 'ALTER TABLE users ADD COLUMN email TEXT DEFAULT NULL' },
+      { name: 'oauth_provider', sql: 'ALTER TABLE users ADD COLUMN oauth_provider TEXT DEFAULT NULL' },
+      { name: 'oauth_id', sql: 'ALTER TABLE users ADD COLUMN oauth_id TEXT DEFAULT NULL' },
+      { name: 'login_attempts', sql: 'ALTER TABLE users ADD COLUMN login_attempts INTEGER DEFAULT 0' },
+      { name: 'locked_until', sql: 'ALTER TABLE users ADD COLUMN locked_until DATETIME DEFAULT NULL' }
+    ];
+
+    let changed = false;
+    for (const column of requiredColumns) {
+      if (!existingColumns.has(column.name)) {
+        this.db.run(column.sql);
+        changed = true;
+      }
+    }
+
+    return changed;
   }
 
   getDatabase(): Database {
