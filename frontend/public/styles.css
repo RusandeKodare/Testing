@@ -452,13 +452,13 @@ input.error {
     position: absolute;
     bottom: 10px;
     right: 10px;
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: #00c8ff;
     border: 4px solid #0a0e27;
     cursor: pointer;
-    font-size: 28px;
+    color: #05253a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -470,6 +470,12 @@ input.error {
     background: #00d4ff;
     transform: scale(1.1);
     box-shadow: 0 8px 24px rgba(0, 200, 255, 0.8);
+}
+
+.camera-glyph {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
 }
 
 .profile-upload-feedback {
@@ -517,51 +523,38 @@ input.error {
     color: #9ec3d8;
 }
 
-.dashboard-shell {
+.dashboard-top-card {
     display: grid;
-    grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
-    gap: 26px;
-    align-items: start;
-}
-
-.dashboard-sidebar {
-    position: sticky;
-    top: 104px;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 32px;
+    align-items: center;
     background: rgba(22, 33, 62, 0.8);
     border: 1px solid rgba(0, 200, 255, 0.28);
     border-radius: 14px;
-    padding: 22px;
+    padding: 28px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-.dashboard-sidebar h3 {
-    color: #00c8ff;
-    font-size: 22px;
-    margin-bottom: 14px;
-}
-
-.profile-sidebar-name {
-    margin-bottom: 18px;
-    text-align: center;
-    font-size: 28px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    font-weight: 800;
-    color: transparent;
-    background: linear-gradient(90deg, #7de8ff 0%, #23beff 48%, #69ffd3 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    text-shadow: 0 0 24px rgba(0, 200, 255, 0.28);
 }
 
 .dashboard-avatar-wrap {
     width: 220px;
     height: 220px;
-    margin: 0 auto 26px;
+    margin: 0 auto;
 }
 
 .dashboard-main-block {
     border-radius: 14px;
+}
+
+.dashboard-top-content h1 {
+    font-size: 44px;
+    color: #00c8ff;
+    margin-bottom: 14px;
+}
+
+.dashboard-top-content > p {
+    color: #b7c7d6;
+    font-size: 20px;
+    margin-bottom: 24px;
 }
 
 .stat {
@@ -1073,17 +1066,18 @@ input.error {
         grid-template-columns: 1fr;
     }
 
-    .dashboard-shell {
+    .dashboard-top-card {
         grid-template-columns: 1fr;
-    }
-
-    .dashboard-sidebar {
-        position: static;
+        text-align: center;
     }
 
     .dashboard-avatar-wrap {
         width: 180px;
         height: 180px;
+    }
+
+    .dashboard-top-content h1 {
+        font-size: 34px;
     }
 }
 

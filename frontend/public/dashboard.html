@@ -28,62 +28,57 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Welcome, <span id="username-hero">User</span>! 👋</h1>
-            <p>You're now securely authenticated and ready to explore your dashboard</p>
-            <div class="hero-stats">
-                <div class="stat"><span>✅</span> Account Verified</div>
-                <div class="stat"><span>🔒</span> Fully Secured</div>
-                <div class="stat"><span>⚡</span> Active Session</div>
-            </div>
-            <p class="settings-cta-note">Manage your profile picture, email, and password in the dedicated settings page.</p>
-            <a class="settings-btn" href="/settings.html">Open Settings</a>
-        </div>
-    </section>
-
     <section class="section-container">
-        <div class="dashboard-shell">
-            <aside class="dashboard-sidebar">
-                <h3 id="profile-sidebar-name" class="profile-sidebar-name">User</h3>
-                <div class="profile-section-hero dashboard-avatar-wrap">
+        <div class="dashboard-top-card">
+            <div class="profile-section-hero dashboard-avatar-wrap">
                     <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
-                    <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
+                    <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Change profile picture" aria-label="Change profile picture">
+                        <svg class="camera-glyph" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M9 5.5 10.2 4h3.6L15 5.5h2.6c1.2 0 2.2 1 2.2 2.2v8.8c0 1.2-1 2.2-2.2 2.2H6.4c-1.2 0-2.2-1-2.2-2.2V7.7c0-1.2 1-2.2 2.2-2.2H9Zm3 2.3a4.6 4.6 0 1 0 0 9.2 4.6 4.6 0 0 0 0-9.2Zm0 1.8a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z" />
+                        </svg>
+                    </button>
                     <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
                 </div>
                 <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
-            </aside>
 
-            <div>
-                <!-- Session Info Section -->
-                <section class="section-bg dashboard-main-block">
-                    <div class="section-container">
-                        <h2>Session Information</h2>
-                        <div class="info-grid">
-                            <div class="info-card-grid">
-                                <div class="icon">👤</div>
-                                <h3>Username</h3>
-                                <p id="username-detail">-</p>
-                            </div>
-                            <div class="info-card-grid">
-                                <div class="icon">⏰</div>
-                                <h3>Login Time</h3>
-                                <p id="login-time">-</p>
-                            </div>
-                            <div class="info-card-grid">
-                                <div class="icon">🟢</div>
-                                <h3>Token Status</h3>
-                                <p id="token-status" class="status-active">Active</p>
-                            </div>
-                            <div class="info-card-grid">
-                                <div class="icon">🌍</div>
-                                <h3>Location</h3>
-                                <p>Global Access</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            <div class="dashboard-top-content">
+                <h1>Welcome, <span id="username-hero">User</span>! 👋</h1>
+                <p>You're now securely authenticated and ready to explore your dashboard</p>
+                <div class="hero-stats">
+                    <div class="stat"><span>✅</span> Account Verified</div>
+                    <div class="stat"><span>🔒</span> Fully Secured</div>
+                    <div class="stat"><span>⚡</span> Active Session</div>
+                </div>
+                <p class="settings-cta-note">Manage your profile picture, email, and password in the dedicated settings page.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Session Info Section -->
+    <section class="section-bg dashboard-main-block">
+        <div class="section-container">
+            <h2>Session Information</h2>
+            <div class="info-grid">
+                <div class="info-card-grid">
+                    <div class="icon">👤</div>
+                    <h3>Username</h3>
+                    <p id="username-detail">-</p>
+                </div>
+                <div class="info-card-grid">
+                    <div class="icon">⏰</div>
+                    <h3>Login Time</h3>
+                    <p id="login-time">-</p>
+                </div>
+                <div class="info-card-grid">
+                    <div class="icon">🟢</div>
+                    <h3>Token Status</h3>
+                    <p id="token-status" class="status-active">Active</p>
+                </div>
+                <div class="info-card-grid">
+                    <div class="icon">🌍</div>
+                    <h3>Location</h3>
+                    <p>Global Access</p>
+                </div>
             </div>
         </div>
     </section>

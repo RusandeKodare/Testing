@@ -44,7 +44,11 @@
                         <p class="settings-description">Upload a new profile image shown in your account navigation.</p>
                         <div class="profile-section-hero settings-avatar-wrap">
                             <img id="profile-avatar" class="profile-avatar-hero" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2300c8ff' opacity='0.1'/%3E%3Ccircle cx='100' cy='70' r='40' fill='%2300c8ff'/%3E%3Cpath d='M 60 140 Q 60 110 100 110 Q 140 110 140 140 L 140 180 L 60 180 Z' fill='%2300c8ff'/%3E%3C/svg%3E" alt="Profile">
-                            <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Click to change profile picture">📷</button>
+                            <button id="change-avatar-btn" type="button" class="change-avatar-btn-hero" title="Change profile picture" aria-label="Change profile picture">
+                                <svg class="camera-glyph" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M9 5.5 10.2 4h3.6L15 5.5h2.6c1.2 0 2.2 1 2.2 2.2v8.8c0 1.2-1 2.2-2.2 2.2H6.4c-1.2 0-2.2-1-2.2-2.2V7.7c0-1.2 1-2.2 2.2-2.2H9Zm3 2.3a4.6 4.6 0 1 0 0 9.2 4.6 4.6 0 0 0 0-9.2Zm0 1.8a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6Z" />
+                                </svg>
+                            </button>
                             <span id="profile-upload-feedback" class="profile-upload-feedback" role="status" aria-live="polite"></span>
                         </div>
                         <input type="file" id="avatar-input" class="hidden-input" accept="image/*">
