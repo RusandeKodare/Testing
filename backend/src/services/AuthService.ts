@@ -64,11 +64,11 @@ export class AuthService {
       this.logger?.debug({ username: credentials.username }, 'Creating user in database');
       const user = this.userRepository.createUser(credentials.username, passwordHash);
 
-      this.logger?.debug({ userId: user.id, username: user.username }, 'User created successfully, generating token');
+      this.logger?.debug({ userId: user.id, username: user.username || credentials.username }, 'User created successfully, generating token');
       const token = this.generateToken(user);
 
       this.logger?.info(
-        { userId: user.id, username: user.username },
+        { userId: user.id, username: user.username || credentials.username },
         'User registered successfully'
       );
 
@@ -76,7 +76,7 @@ export class AuthService {
         success: true,
         message: 'Registration successful',
         token,
-        user: { id: user.id!, username: user.username }
+        user: { id: user.id!, username: user.username || credentials.username }
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -114,7 +114,7 @@ export class AuthService {
       // Check if account is locked
       if (this.userRepository.isAccountLocked(user)) {
         this.logger?.warn(
-          { userId: user.id, username: user.username },
+          { userId: user.id, username: user.username || credentials.username },
           'Login attempt on locked account'
         );
         return {
@@ -124,6 +124,16 @@ export class AuthService {
       }
 
       this.logger?.debug({ username: credentials.username }, 'Comparing password');
+      
+      // Check if user has a password (not OAuth-only)
+      if (!user.passwordHash) {
+        this.logger?.warn({ username: credentials.username }, 'Password login attempted for OAuth-only account');
+        return {
+          success: false,
+          message: 'Invalid credentials'
+        };
+      }
+      
       const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
 
       if (!isPasswordValid) {
@@ -161,7 +171,7 @@ export class AuthService {
       const token = this.generateToken(user);
 
       this.logger?.info(
-        { userId: user.id, username: user.username },
+        { userId: user.id, username: user.username || credentials.username },
         'User logged in successfully'
       );
 
@@ -169,7 +179,7 @@ export class AuthService {
         success: true,
         message: 'Login successful',
         token,
-        user: { id: user.id!, username: user.username }
+        user: { id: user.id!, username: user.username || credentials.username }
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -187,7 +197,7 @@ export class AuthService {
 
   private generateToken(user: User): string {
     return jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username || user.email || 'user' },
       this.jwtSecret,
       { expiresIn: '1h' }
     );

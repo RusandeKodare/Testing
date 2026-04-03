@@ -7,9 +7,11 @@ import dotenv from 'dotenv';
 import { DatabaseConfig } from './config/database';
 import { UserRepository } from './repositories/UserRepository';
 import { AuthService } from './services/AuthService';
+import { OAuthService } from './services/OAuthService';
 import { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createProfileRoutes } from './routes/profileRoutes';
+import { createOAuthRoutes } from './routes/oauthRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { getLogger } from './utils/logger';
 
@@ -86,6 +88,24 @@ async function startServer() {
   const authLogger = getLogger('auth');
   const authService = new AuthService(userRepository, JWT_SECRET, authLogger);
   const authController = new AuthController(authService, authLogger);
+
+  // OAuth setup (optional - only if credentials are configured)
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/oauth/google/callback';
+
+  if (googleClientId && googleClientSecret) {
+    const oauthService = new OAuthService(
+      userRepository,
+      googleClientId,
+      googleClientSecret,
+      googleRedirectUri
+    );
+    app.use('/api/oauth', createOAuthRoutes(oauthService, JWT_SECRET));
+    logger.info('OAuth service initialized');
+  } else {
+    logger.warn('Google OAuth credentials not configured - OAuth login disabled');
+  }
 
   app.use('/api/auth', authLimiter, createAuthRoutes(authController));
   app.use('/api/profile', createProfileRoutes(userRepository));

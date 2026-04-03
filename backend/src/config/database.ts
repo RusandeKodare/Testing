@@ -31,13 +31,23 @@ export class DatabaseConfig {
     this.db.run(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
+        username TEXT UNIQUE,
+        password_hash TEXT,
         profile_picture TEXT DEFAULT NULL,
+        email TEXT DEFAULT NULL,
+        oauth_provider TEXT DEFAULT NULL,
+        oauth_id TEXT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         login_attempts INTEGER DEFAULT 0,
         locked_until DATETIME DEFAULT NULL
       )
+    `);
+    
+    // Create unique index for OAuth users
+    this.db.run(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_user 
+      ON users(oauth_provider, oauth_id) 
+      WHERE oauth_provider IS NOT NULL AND oauth_id IS NOT NULL
     `);
   }
 

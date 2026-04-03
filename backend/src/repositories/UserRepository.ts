@@ -81,6 +81,7 @@ export class UserRepository {
   }
 
   incrementLoginAttempts(username: string): void {
+    if (!username) return;
     const stmt = this.db.prepare(
       'UPDATE users SET login_attempts = login_attempts + 1 WHERE username = ?'
     );
@@ -90,6 +91,7 @@ export class UserRepository {
   }
 
   lockAccount(username: string, lockDurationMinutes: number = 30): void {
+    if (!username) return;
     const lockedUntil = new Date(Date.now() + lockDurationMinutes * 60000);
     const stmt = this.db.prepare(
       'UPDATE users SET locked_until = ? WHERE username = ?'
@@ -100,6 +102,7 @@ export class UserRepository {
   }
 
   resetLoginAttempts(username: string): void {
+    if (!username) return;
     const stmt = this.db.prepare(
       'UPDATE users SET login_attempts = 0, locked_until = NULL WHERE username = ?'
     );
@@ -118,7 +121,9 @@ export class UserRepository {
 
     if (now > lockedUntil) {
       // Lock has expired, reset it
-      this.resetLoginAttempts(user.username);
+      if (user.username) {
+        this.resetLoginAttempts(user.username);
+      }
       return false;
     }
 
@@ -159,5 +164,70 @@ export class UserRepository {
     }
 
     return result[0].values[0][0] as string | null;
+  }
+
+  findByOAuth(provider: string, oauthId: string): User | null {
+    const result = this.db.exec(
+      'SELECT id, username, password_hash, profile_picture, email, oauth_provider, oauth_id, created_at, login_attempts, locked_until FROM users WHERE oauth_provider = ? AND oauth_id = ?',
+      [provider, oauthId]
+    );
+
+    if (result.length === 0 || result[0].values.length === 0) {
+      return null;
+    }
+
+    const row = result[0].values[0];
+    return {
+      id: row[0] as number,
+      username: row[1] as string | null,
+      passwordHash: row[2] as string | null,
+      profilePicture: row[3] as string | null,
+      email: row[4] as string | null,
+      oauthProvider: row[5] as 'google' | 'github' | null,
+      oauthId: row[6] as string | null,
+      createdAt: new Date(row[7] as string),
+      loginAttempts: row[8] as number,
+      lockedUntil: row[9] ? new Date(row[9] as string) : null
+    };
+  }
+
+  createOAuthUser(data: {
+    username: string;
+    email: string;
+    oauthProvider: string;
+    oauthId: string;
+    profilePicture: string | null;
+  }): User {
+    const stmt = this.db.prepare(
+      'INSERT INTO users (username, password_hash, email, oauth_provider, oauth_id, profile_picture, login_attempts, locked_until) VALUES (?, NULL, ?, ?, ?, ?, 0, NULL)'
+    );
+
+    stmt.run([data.username, data.email, data.oauthProvider, data.oauthId, data.profilePicture]);
+    stmt.free();
+
+    this.dbConfig?.persistChanges();
+
+    const result = this.db.exec(
+      'SELECT id, username, password_hash, profile_picture, email, oauth_provider, oauth_id, created_at, login_attempts, locked_until FROM users WHERE oauth_provider = ? AND oauth_id = ?',
+      [data.oauthProvider, data.oauthId]
+    );
+
+    if (result.length === 0 || result[0].values.length === 0) {
+      throw new Error('Failed to create OAuth user');
+    }
+
+    const row = result[0].values[0];
+    return {
+      id: row[0] as number,
+      username: row[1] as string | null,
+      passwordHash: row[2] as string | null,
+      profilePicture: row[3] as string | null,
+      email: row[4] as string | null,
+      oauthProvider: row[5] as 'google' | 'github' | null,
+      oauthId: row[6] as string | null,
+      createdAt: new Date(row[7] as string),
+      loginAttempts: row[8] as number,
+      lockedUntil: row[9] ? new Date(row[9] as string) : null
+    };
   }
 }
