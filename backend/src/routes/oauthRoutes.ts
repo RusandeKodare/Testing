@@ -99,6 +99,7 @@ export function createOAuthRoutes(
       const expectedState = req.cookies?.oauth_state as string | undefined;
       const expectedBinding = req.cookies?.oauth_state_binding as string | undefined;
       const currentBinding = createRequestBinding(req);
+      pruneExpiredStates();
       const storedState = oauthStateStore.get(state);
       const stateIsValid = Boolean(storedState) && (storedState as OAuthStateEntry).expiresAt > Date.now();
 
@@ -110,6 +111,7 @@ export function createOAuthRoutes(
         !stateIsValid ||
         storedState?.binding !== currentBinding
       ) {
+        oauthStateStore.delete(state);
         res.status(400).json({
           success: false,
           message: 'Invalid OAuth state',

@@ -179,7 +179,8 @@ export function createProfileRoutes(
       const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
       const requestIp = req.ip || req.socket?.remoteAddress || 'unknown';
       const requestHeaders = req.headers || {};
-      const requestUserAgent = typeof requestHeaders['user-agent'] === 'string' ? requestHeaders['user-agent'] : 'unknown';
+      const rawUserAgent = typeof requestHeaders['user-agent'] === 'string' ? requestHeaders['user-agent'] : 'unknown';
+      const requestUserAgent = rawUserAgent.replace(/[\r\n\t\x00-\x1F\x7F]/g, ' ').slice(0, 512).trim() || 'unknown';
       const changedAtIso = new Date().toISOString();
 
       if (!userId) {

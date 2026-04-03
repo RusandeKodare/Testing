@@ -37,7 +37,11 @@ export class Dashboard {
 
   async initialize(): Promise<void> {
     void reportBackendHealth('backend-status-dashboard');
-    await initializeCsrfToken();
+    try {
+      await initializeCsrfToken();
+    } catch {
+      console.error('Failed to initialize CSRF token for dashboard. Continuing with session init.');
+    }
     await this.initializeSession();
   }
 

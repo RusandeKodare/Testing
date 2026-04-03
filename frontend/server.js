@@ -6,13 +6,17 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const indexFilePath = path.join(__dirname, 'public', 'index.html');
+const dashboardFilePath = path.join(__dirname, 'public', 'dashboard.html');
+const indexTemplate = fs.readFileSync(indexFilePath, 'utf8');
+const dashboardTemplate = fs.readFileSync(dashboardFilePath, 'utf8');
 
 function createCsrfFormToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-function renderHtmlWithCsrf(filePath, csrfToken) {
-  return fs.readFileSync(filePath, 'utf8').replace(/__CSRF_TOKEN__/g, csrfToken);
+function renderHtmlWithCsrf(templateHtml, csrfToken) {
+  return templateHtml.replace(/__CSRF_TOKEN__/g, csrfToken);
 }
 
 const frontendLimiter = rateLimit({
@@ -69,16 +73,19 @@ app.use('/dist', express.static(path.join(__dirname, 'dist'), {
 }));
 
 app.get('/', (req, res) => {
-  res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const csrfToken = createCsrfFormToken();
-  const indexFile = path.join(__dirname, 'public', 'index.html');
-  res.type('html').send(renderHtmlWithCsrf(indexFile, csrfToken));
+  res.type('html').send(renderHtmlWithCsrf(indexTemplate, csrfToken));
 });
 
 app.get('/dashboard.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const csrfToken = createCsrfFormToken();
-  const dashboardFile = path.join(__dirname, 'public', 'dashboard.html');
-  res.type('html').send(renderHtmlWithCsrf(dashboardFile, csrfToken));
+  res.type('html').send(renderHtmlWithCsrf(dashboardTemplate, csrfToken));
 });
 
 app.use(express.static(path.join(__dirname, 'public'), {
