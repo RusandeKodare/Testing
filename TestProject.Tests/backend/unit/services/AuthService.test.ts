@@ -1,8 +1,11 @@
 import { AuthService } from '../../../src/services/AuthService';
 import { UserRepository } from '../../../src/repositories/UserRepository';
 import { User } from '../../../src/models/User';
+import { randomBytes } from 'crypto';
 
 jest.mock('../../../src/repositories/UserRepository');
+
+const testJwtSecret = randomBytes(32).toString('hex');
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -10,7 +13,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mockUserRepository = new UserRepository(null as any) as jest.Mocked<UserRepository>;
-    authService = new AuthService(mockUserRepository, 'test-secret');
+    authService = new AuthService(mockUserRepository, testJwtSecret);
   });
 
   describe('register', () => {
@@ -155,7 +158,7 @@ describe('AuthService', () => {
 
     it('should return null for expired token', () => {
       const jwt = require('jsonwebtoken');
-      const expiredToken = jwt.sign({ id: 1, username: 'test' }, 'test-secret', { expiresIn: '-1s' });
+      const expiredToken = jwt.sign({ id: 1, username: 'test' }, testJwtSecret, { expiresIn: '-1s' });
 
       const verified = authService.verifyToken(expiredToken);
 
